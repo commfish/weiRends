@@ -197,7 +197,7 @@ f_remove_dates <- function(preds, run_through){
     # mutate(test = ifelse(julian >= run_through, 1, 0)) %>% 
     group_by(year, days) %>% 
     summarise(max = max(julian)) %>% 
-    mutate(test = ifelse(max >= run_through, 1, 0)) -> out
+    mutate(test = ifelse(max > run_through, 1, 0)) -> out
   
   # if(nrow(out) < length(unique(preds$year)) * 4) message('need to keep the weir in longer; manually reduce run_through')
  
