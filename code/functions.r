@@ -206,7 +206,7 @@ f_remove_dates <- function(preds, run_through){
   
 }  
 
-f_run_missed <- function(preds, remove_dates){
+f_run_caught <- function(preds, remove_dates){
   
   preds %>% 
     left_join(remove_dates) %>% 
