@@ -129,7 +129,7 @@ f_pred_plot <- function(preds){
     geom_point(aes(y = cumsum), alpha= 0.15) +
     scale_y_continuous(labels = comma) +
     xlab('\nJulian date') +
-    ylab('Escapement\n')
+    ylab('Cumulative Escapement\n')
   
 }
 
