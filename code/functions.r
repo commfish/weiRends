@@ -96,6 +96,7 @@ f_param_plot <- function(params){
     geom_line(alpha = 0.5) +
     geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3) +
     facet_wrap(~term, scales = 'free_y')
+  ggsave("figs/param_plot.png", dpi = 100, height = 5, width = 7, units = "in") 
 }
 
 f_preds <- function(data, model){
@@ -130,7 +131,7 @@ f_pred_plot <- function(preds){
     scale_y_continuous(labels = comma) +
     xlab('\nJulian date') +
     ylab('Cumulative Escapement\n')
-  
+ggsave("figs/pred_plot.png", dpi = 100, height = 5, width = 7, units = "in") 
 }
 
 f_run_through <- function(data, preds){
