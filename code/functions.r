@@ -234,7 +234,7 @@ f_risk_plot <- function(preds, remove_dates){
   preds %>% 
     left_join(remove_dates) %>% 
     group_by(days, year) %>% 
-    mutate(sum_fit = sum(fit_run)) %>% 
+    mutate(sum_fit = sum(fit_run))%>% 
     filter(julian<=max) %>% 
     summarise(diff = mean(1 - (sum(fit_run) / mean(sum_fit)))) %>% 
     group_by(days) %>% 
@@ -247,13 +247,13 @@ f_risk_plot <- function(preds, remove_dates){
               '50' = (100 * (quantile(diff, .50)))) %>% 
     gather(`% Chance`, Percent, -days) %>% 
     mutate(position = rep(1:7, each = length(unique(days)))) %>% 
-    mutate(risk = rep(c(1, 5, 10, 20, 30, 40, 50), each = 4)) %>% 
+    mutate(risk = rep(c(1, 5, 10, 20, 30, 40, 50), each = 4))  %>% 
     ggplot(aes(risk, Percent, color = days)) +
     geom_line() +
     xlab('% Risk') +
     ylab('% of missed run') +
     expand_limits(y = 0)
- 
+ggsave("figs/risk_plot.png", dpi = 100, height = 5, width = 7, units = "in")
 }
 
 f_run_risk <- function(preds, remove_dates){
