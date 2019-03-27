@@ -1,3 +1,8 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
 ## Initial request
 
 Request 2019-01-23  
