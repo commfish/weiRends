@@ -17,23 +17,18 @@ knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message = FALSE, error=FALSE)
 Steve Heinl
 
 ##Background
-The objectives of this analysis were to: 
-    1.  Model (Gompertz or logistic) the tails of the run to quantify a hard ending date for weir operations – the date to which the weir would be required to be operated (e.g., would capture 95% of the escapement on average); 
-    2. Estimate % of counts missed (with 95% CI) if project was operated past the hard ending date until daily counts equaled less than 1% of cumulative count for 3, 4, or 5 days in a row.
-    3. Analyze the Situk River and Chilkoot Lake sockeye salmon weir data to determine the hard ending date the weir is required to be operated and the percent of missed counts if the project was operated past the hard ending date until daily counts equaled less than 1% of cumulative count for 3, 4, or 5 days in a row.
+The objectives of this analysis were to:  1.  Model (Gompertz or logistic) the tails of the run to quantify a hard ending date for weir operations – the date to which the weir would be required to be operated (e.g., would capture 95% of the escapement on average);  2. Estimate % of counts missed (with 95% CI) if project was operated past the hard ending date until daily counts equaled less than 1% of cumulative count for 3, 4, or 5 days in a row.  3. Analyze the Situk River and Chilkoot Lake sockeye salmon weir data to determine the hard ending date the weir is required to be operated and the percent of missed counts if the project was operated past the hard ending date until daily counts equaled less than 1% of cumulative count for 3, 4, or 5 days in a row. All associated files, data, and code are located on GitHub https://github.com/commfish/weiRends.
 
 ###Data
-The data format is as follows:
-Two columns:  
-date (preferably in year-mm-dd format) and weir count data. An example is:
-date        count
+The data format is two columns with date (preferably in year-mm-dd format) and weir count data. An example is:
+date       count  
 2019-01-20  20
 
 This is for a single species at a single weir. No other values or comments should be 
 added to the file. It should preferably be in .csv format. 
 
 ###Analysis
-The Gompertz model is written as $$p\mathrm{e}^{{-e}^{-k(t-t_0)}}$$ and the logistic model is written as $$\frac{p}{\mathrm{1+e}^{-k(t-t_0)}}$$.
+The Gompertz model is written as $$p\mathrm{e}^{{-e}^{-k(t-t_0)}}$$ and the logistic model is written as $$\frac{p}{\mathrm{1+e}^{-k(t-t_0)}}.$$
 
 
 For the analysis for each stock, all packages need to be loaded (see helper.r file) prior to running models. There are a set of 15 functions that need to be run in order.
@@ -113,7 +108,7 @@ ggsave("figs/situk/preds_plot.png", dpi = 100, height = 5, width = 7, units = "i
 f_run_through(df, preds) -> run_through
 
 # the date in a more informative format
-f_real_day(run_through)  
+f_real_day(run_through) -> real_day
 
 # dates the weirs would be removed based upon 1% rule
 # for 5,4,3, or 2 days
@@ -135,27 +130,29 @@ f_median_end_date(remove_dates)
 
 ##Results
 ####Situk River Sockeye Salmon Data
-Based on the deviance criterion of `r x` the Gompertz model was the preferred model to model the tails of the run. The parameter values by year were calculated (Figure 1). 
+Based on the deviance criterion of `r x` the Gompertz model was the preferred model to model the tails of the run. The julian date that that 95% of the modeled run has been observed - on average is `r run_through` (`r real_day`).
 
 
 ```{r fig1, echo=FALSE}
 include_graphics("../figs/situk/param_plot.png")
 ```
 
-
 Figure 1: Parameter estimates by year for the preferred model. 
+\pagebreak
 
 ```{r fig2}
 include_graphics("../figs/situk/preds_plot.png")
 ```
 
 Figure 2: Cumulative escapement by julian date and year with modelled tails. 
+\pagebreak
 
 ```{r fig3}
 include_graphics("../figs/situk/risk_plot.png")
 ```
 
 Figure 3: 
+\pagebreak
 
 ```{r deviance_Chilkoot, echo=F, warning=F, message=F, error=F, include =F}
 # load ----
@@ -189,7 +186,8 @@ f_summary(model_logistic)
 # which model performs better
 # >0.50 = model 1
 # <0.50 = model 2
-f_deviance(model, model_logistic)
+f_deviance(model, model_logistic)-> y
+y <- round(x, y)# check model fits - did all models converge?
 
 # get parameters
 f_params(model_logistic) -> params
@@ -211,7 +209,7 @@ ggsave("figs/chilkoot/preds_plot.png", dpi = 100, height = 5, width = 7, units =
 f_run_through(df, preds) -> run_through
 
 # the date in a more informative format
-f_real_day(run_through)  
+f_real_day(run_through) -> real_day 
 
 # dates the weirs would be removed based upon 1% rule
 # for 5,4,3, or 2 days
@@ -232,7 +230,7 @@ f_median_end_date(remove_dates)
 ```
 
 ####Chilkoot River Sockeye Salmon Data
-Based on the deviance criterion of `r x` the Gompertz model was the preferred model to model the tails of the run. The parameter values by year were calculated (Figure 1). 
+Based on the deviance criterion of `r y` the logistic model was the preferred model to model the tails of the run. The julian date that that 95% of the modeled run has been observed - on average is `r run_through` (`r real_day`).
 
 ```{r fig4, echo=FALSE}
 include_graphics("../figs/chilkoot/param_plot.png")
@@ -256,7 +254,7 @@ Figure 6:
 #Recommendations
 
 
-##References
+
 
 \pagebreak
 ```{r sess_info, echo=FALSE}
