@@ -50,12 +50,14 @@ f_params(model_logistic) -> params
 # plot parameter fits - because why not?
 # do any look out of place?
 f_param_plot(params)
+ggsave("figs/chilkoot/param_plot.png", dpi = 100, height = 5, width = 7, units = "in") 
 
 # predict the model on a complete dataset
 f_preds(df, model_logistic) -> preds 
 
 # plot the predicted data
 f_pred_plot(preds)
+ggsave("figs/chilkoot/preds_plot.png", dpi = 100, height = 5, width = 7, units = "in") 
 
 # what is the minimum day that the weir should be in place?
 # the Julian date that 95% of the modeled run has been observed - on average
@@ -73,6 +75,7 @@ f_run_caught(preds, remove_dates)
 
 # plot of missed run and risk
 f_risk_plot(preds, remove_dates)
+ggsave("figs/chilkoot/risk_plot.png", dpi = 100, height = 5, width = 7, units = "in") 
 
 # Percent of risk at a given % of missed run
 f_run_risk(preds, remove_dates)
