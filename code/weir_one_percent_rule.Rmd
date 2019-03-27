@@ -1,0 +1,156 @@
+---
+title: "Weir One Percent Rule"
+author: "Ben Williams and Sara Miller (ben.williams.alaska.gov)"
+date: "April 2019"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+---
+```{r setup, echo = FALSE, warning = FALSE, message = FALSE, error = FALSE}
+library(knitr)
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message = FALSE, error=FALSE)
+```
+
+##Recipient(s)
+Steve Heinl
+
+##Background
+The objectives of this analysis were to: 
+    1.  Model (Gompertz or logistic) the tails of the run to quantify a hard ending date for weir operations – the date to which the weir would be required to be operated (e.g., would capture 95% of the escapement on average); 
+    2. Estimate % of counts missed (with 95% CI) if project was operated past the hard ending date until daily counts equaled less than 1% of cumulative count for 3, 4, or 5 days in a row.
+    3. Analyze the Situk River and Chilkoot Lake sockeye salmon weir data to determine the hard ending date the weir is required to be operated and the percent of missed counts if the project was operated past the hard ending date until daily counts equaled less than 1% of cumulative count for 3, 4, or 5 days in a row.
+
+###Data
+The data format is as follows:
+Two columns:  
+date (preferably in year-mm-dd format) and weir count data. An example is:
+date        count
+2019-01-20  20
+
+This is for a single species at a single weir. No other values or comments should be 
+added to the file. It should preferably be in .csv format. 
+
+###Analysis
+For the analysis for each stock, all packages need to be loaded (see helper.r file) prior to running models.
+
+There are a set of functions that need to be run in order:
+
+1. f_clean_data = formats data for modeling
+2. f_gomp_model = runs a Gompertz model for each year
+3. f_logistic_model = runs a logistic model for each year
+4. f_summary = examine model outputs
+5. f_deviance = compare Gompertz and logistic models and proceed with best fitting model; If deviance >0.50, then the Gompertz Model is preferred, and if deviance <0.50, then the logistic model is preferred
+6. f_params = get parameter outputs 
+7. f_param_plot = plot parameter values 
+8. f_preds = predict the model
+9. f_pred_plot = examine predictions
+10. f_run_through = the weir should be in place through this date
+11. f_real_day = change julian date to a date people can understand
+12. f_run_caught = percent of the run that is caught at a given risk level
+13. f_risk_plot = percent of missed run at a given level of risk (the inverse of # 12)
+14. f_run_risk = percent of risk at a given percent of missed run
+15. f_median_end_dates = median, 25%, and 75% quantiles of weir removal dates (julian) for 1% rules
+
+Each *stock*_analysis.r file sources the same functions and helper files.
+
+##Methods
+The Situk River (years 1988-2018) and Chilkoot Lake (years 1976-2018) sockeye salmon weir data were analyzed to determine the hard ending date the weir is required to be operated based on capturing 95% of the escapement on average using hoistorical data. Then, a risk anlysis was performed by calculating the percent of missed counts based on whether the project was operated past the hard ending date until daily counts equaled less than 1% of the cumulative count for 3, 4, or 5 days in a row. 
+
+```{r deviance, echo=F, warning=F, message=F, error=F, include =F}
+# load ----
+source('code/helper.r')
+source('code/functions.r')
+
+# data ----
+# data inputs are date (mm/dd/yyyy) and weir count
+
+read_csv("data/situk_weir_1988-2018.csv") %>% 
+  filter(species=='Sockeye') %>% 
+  dplyr::select(date, count) -> situk
+
+# run functions ----
+
+# format data
+f_clean_data(situk) -> df
+
+# model
+f_gomp_model(df) -> model
+
+# model logistic function
+f_logistic_model(df) -> model_logistic
+
+# check model fits - did all models converge?
+# if not may need to go into f_gomp_model and change the lower 
+# and upper starting values isConv=TRUE
+f_summary(model)
+f_summary(model_logistic)
+
+# which model performs better
+# >0.50 = model 1
+# <0.50 = model 2
+f_deviance(model, model_logistic) -> x
+x <- round(x, 2)# check model fits - did all models converge?
+```
+
+##Results
+####Situk River Sockeye Salmon Data
+Based on the deviance criterion `r x` the Gompertz model was the preferred model to model the tails of the run. The parameter values by year were calculated (Figure 1). 
+
+```{r fig1, echo=FALSE}
+include_graphics("figs/situk/param_plot.png")
+```
+
+Figure 1: Figure A is the dropout percentage and trend line for the 2017 data. In 2017, 277 tagged fish were identified to fates with a 32.1% dropout rate. Figure B is the number of tagged fish that did not cross the border. The number above each point is the total sample size. For example, in statistical week 37, 4/9 fish (44% dropout rate) did not cross the border.
+
+```{r fig2}
+include_graphics("figs/situk/preds_plot.png")
+```
+
+Figure 2: Figure A is the dropout percentage and trend line for the 2017 data. In 2017, 277 tagged fish were identified to fates with a 32.1% dropout rate. Figure B is the number of tagged fish that did not cross the border. The number above each point is the total sample size. For example, in statistical week 37, 4/9 fish (44% dropout rate) did not cross the border.
+
+```{r fig3}
+include_graphics("figs/situk/risk_plot.png")
+```
+
+Figure 3: Figure A is the dropout percentage and trend line for the 2017 data. In 2017, 277 tagged fish were identified to fates with a 32.1% dropout rate. Figure B is the number of tagged fish that did not cross the border. The number above each point is the total sample size. For example, in statistical week 37, 4/9 fish (44% dropout rate) did not cross the border.
+####Chilkoot River Sockeye Salmon Data
+
+```{r fig4, echo=FALSE}
+include_graphics("figs/chilkoot/param_plot.png")
+```
+
+Figure 4: Figure A is the dropout percentage and trend line for the 2017 data. In 2017, 277 tagged fish were identified to fates with a 32.1% dropout rate. Figure B is the number of tagged fish that did not cross the border. The number above each point is the total sample size. For example, in statistical week 37, 4/9 fish (44% dropout rate) did not cross the border.
+
+```{r fig5}
+include_graphics("figs/chilkoot/preds_plot.png")
+```
+
+Figure 5: Figure A is the dropout percentage and trend line for the 2017 data. In 2017, 277 tagged fish were identified to fates with a 32.1% dropout rate. Figure B is the number of tagged fish that did not cross the border. The number above each point is the total sample size. For example, in statistical week 37, 4/9 fish (44% dropout rate) did not cross the border.
+
+```{r fig6}
+include_graphics("figs/chilkoot/risk_plot.png")
+```
+
+Figure 6: Figure A is the dropout percentage and trend line for the 2017 data. In 2017, 277 tagged fish were identified to fates with a 32.1% dropout rate. Figure B is the number of tagged fish that did not cross the border. The number above each point is the total sample size. For example, in statistical week 37, 4/9 fish (44% dropout rate) did not cross the border.
+
+#Recommendations
+
+
+##References
+Andel, J., A. Foos, R. E. Brenner, B. Huebschwerlen, S. E. Miller, and A. W. Piston.  2018. Operational plan: Migration, tagging response, distribution, and inriver abundance of Taku River sockeye salmon. Alaska Department of Fish and Game, Division of Commercial Fisheries, Regional Operational Plan ROP.CF.1J.2018.01, Douglas.
+
+Andel, J., R.E. Brenner, and S.E. Miller. 2017. Migration, tagging response and distributism of sockeye salmon returning to the Taku River. Alaska Department of Fish and Game, Division of Commercial Fisheries, Regional Operational Plan ROP.CF.1J.2016.xx, Anchorage. (not published)
+
+Eiler, J. H., B. D. Nelson, and R. F. Bradshaw. 1992. Riverine spawning by sockeye salmon in the Taku River, Alaska and British Columbia. Transactions of the American Fisheries Society 121: 701-708.
+
+\pagebreak
+
+ 
+\pagebreak
+
+\pagebreak
+```{r sess_info, echo=FALSE}
+#sessionInfo()
+```

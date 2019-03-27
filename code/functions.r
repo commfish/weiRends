@@ -69,7 +69,7 @@ f_summary <- function(model){
 
 f_deviance <- function(model1, model2){
   sum((f_summary(model1)$deviance - 
-         f_summary(model2)$deviance)<0) /length(unique(model1$year))
+         f_summary(model2)$deviance)<0) /length(unique(model1$year)) 
 }
 
 f_params <- function(model){

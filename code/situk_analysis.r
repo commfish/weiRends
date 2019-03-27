@@ -42,7 +42,7 @@ f_summary(model_logistic)
 # which model performs better
 # >0.50 = model 1
 # <0.50 = model 2
-f_deviance(model, model_logistic)# check model fits - did all models converge?
+f_deviance(model, model_logistic) # check model fits - did all models converge?
 
 # get parameters
 f_params(model) -> params
