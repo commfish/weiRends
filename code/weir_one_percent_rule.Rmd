@@ -33,9 +33,10 @@ This is for a single species at a single weir. No other values or comments shoul
 added to the file. It should preferably be in .csv format. 
 
 ###Analysis
-For the analysis for each stock, all packages need to be loaded (see helper.r file) prior to running models.
+The Gompertz model is written as $$p\mathrm{e}^{{-e}^{-k(t-t_0)}}$$ and the logistic model is written as $$\frac{p}{\mathrm{1+e}^{-k(t-t_0)}}$$.
 
-There are a set of functions that need to be run in order:
+
+For the analysis for each stock, all packages need to be loaded (see helper.r file) prior to running models. There are a set of 15 functions that need to be run in order.
 
 1. f_clean_data = formats data for modeling
 2. f_gomp_model = runs a Gompertz model for each year
@@ -58,7 +59,7 @@ Each *stock*_analysis.r file sources the same functions and helper files.
 ##Methods
 The Situk River (years 1988-2018) and Chilkoot Lake (years 1976-2018) sockeye salmon weir data were analyzed to determine the hard ending date the weir is required to be operated based on capturing 95% of the escapement on average using hoistorical data. Then, a risk anlysis was performed by calculating the percent of missed counts based on whether the project was operated past the hard ending date until daily counts equaled less than 1% of the cumulative count for 3, 4, or 5 days in a row. 
 
-```{r deviance, echo=F, warning=F, message=F, error=F, include =F}
+```{r deviance_Situk, echo=F, warning=F, message=F, error=F, include =F}
 # load ----
 source('code/helper.r')
 source('code/functions.r')
@@ -92,63 +93,170 @@ f_summary(model_logistic)
 # <0.50 = model 2
 f_deviance(model, model_logistic) -> x
 x <- round(x, 2)# check model fits - did all models converge?
+
+# get parameters
+f_params(model) -> params
+
+# plot parameter fits - because why not?
+f_param_plot(params)
+ggsave("figs/situk/param_plot.png", dpi = 100, height = 5, width = 7, units = "in") 
+
+# predict the model on a complete dataset
+f_preds(df, model) -> preds
+
+# plot the predicted data
+f_pred_plot( preds)
+ggsave("figs/situk/preds_plot.png", dpi = 100, height = 5, width = 7, units = "in") 
+
+# what is the minimum day that the weir should be in place?
+# the Julian date that 95% of the modeled run has been observed - on average
+f_run_through(df, preds) -> run_through
+
+# the date in a more informative format
+f_real_day(run_through)  
+
+# dates the weirs would be removed based upon 1% rule
+# for 5,4,3, or 2 days
+f_remove_dates(preds, run_through) -> remove_dates
+
+# Percent of the run that is caught at a given risk level
+f_run_caught(preds, remove_dates)
+
+# plot of missed run and risk
+f_risk_plot(preds, remove_dates)
+ggsave("figs/situk/risk_plot.png", dpi = 100, height = 5, width = 7, units = "in") 
+
+# Percent of risk at a given % of missed run
+f_run_risk(preds, remove_dates)
+
+# Median, 25% and 75% quantiles of weir end date
+f_median_end_date(remove_dates)
 ```
 
 ##Results
 ####Situk River Sockeye Salmon Data
-Based on the deviance criterion `r x` the Gompertz model was the preferred model to model the tails of the run. The parameter values by year were calculated (Figure 1). 
+Based on the deviance criterion of `r x` the Gompertz model was the preferred model to model the tails of the run. The parameter values by year were calculated (Figure 1). 
+
 
 ```{r fig1, echo=FALSE}
-include_graphics("figs/situk/param_plot.png")
+include_graphics("../figs/situk/param_plot.png")
 ```
 
-Figure 1: Figure A is the dropout percentage and trend line for the 2017 data. In 2017, 277 tagged fish were identified to fates with a 32.1% dropout rate. Figure B is the number of tagged fish that did not cross the border. The number above each point is the total sample size. For example, in statistical week 37, 4/9 fish (44% dropout rate) did not cross the border.
+
+Figure 1: Parameter estimates by year for the preferred model. 
 
 ```{r fig2}
-include_graphics("figs/situk/preds_plot.png")
+include_graphics("../figs/situk/preds_plot.png")
 ```
 
-Figure 2: Figure A is the dropout percentage and trend line for the 2017 data. In 2017, 277 tagged fish were identified to fates with a 32.1% dropout rate. Figure B is the number of tagged fish that did not cross the border. The number above each point is the total sample size. For example, in statistical week 37, 4/9 fish (44% dropout rate) did not cross the border.
+Figure 2: Cumulative escapement by julian date and year with modelled tails. 
 
 ```{r fig3}
-include_graphics("figs/situk/risk_plot.png")
+include_graphics("../figs/situk/risk_plot.png")
 ```
 
-Figure 3: Figure A is the dropout percentage and trend line for the 2017 data. In 2017, 277 tagged fish were identified to fates with a 32.1% dropout rate. Figure B is the number of tagged fish that did not cross the border. The number above each point is the total sample size. For example, in statistical week 37, 4/9 fish (44% dropout rate) did not cross the border.
+Figure 3: 
+
+```{r deviance_Chilkoot, echo=F, warning=F, message=F, error=F, include =F}
+# load ----
+source('code/helper.r')
+source('code/functions.r')
+
+# data ----
+# data inputs are date (mm/dd/yyyy) and weir count
+
+read_csv('data/chilkoot_weir_1976-2018.csv') %>% 
+  filter(Species=='Sockeye') %>% 
+  dplyr::select(date, count) -> chilkoot
+
+# run functions ----
+
+# format data
+f_clean_data(chilkoot) -> df
+
+# model Gompertz function
+f_gomp_model(df) -> model
+
+# model logistic function
+f_logistic_model(df) -> model_logistic
+
+# check model fits - did all models converge?
+# if not may need to go into f_gomp_model and change the lower 
+# and upper starting values isConv=TRUE
+f_summary(model)
+f_summary(model_logistic)
+
+# which model performs better
+# >0.50 = model 1
+# <0.50 = model 2
+f_deviance(model, model_logistic)
+
+# get parameters
+f_params(model_logistic) -> params
+
+# plot parameter fits - because why not?
+# do any look out of place?
+f_param_plot(params)
+ggsave("figs/chilkoot/param_plot.png", dpi = 100, height = 5, width = 7, units = "in") 
+
+# predict the model on a complete dataset
+f_preds(df, model_logistic) -> preds 
+
+# plot the predicted data
+f_pred_plot(preds)
+ggsave("figs/chilkoot/preds_plot.png", dpi = 100, height = 5, width = 7, units = "in") 
+
+# what is the minimum day that the weir should be in place?
+# the Julian date that 95% of the modeled run has been observed - on average
+f_run_through(df, preds) -> run_through
+
+# the date in a more informative format
+f_real_day(run_through)  
+
+# dates the weirs would be removed based upon 1% rule
+# for 5,4,3, or 2 days
+f_remove_dates(preds, run_through) -> remove_dates
+
+# Percent of the run that is caught at a given risk level
+f_run_caught(preds, remove_dates)
+
+# plot of missed run and risk
+f_risk_plot(preds, remove_dates)
+ggsave("figs/chilkoot/risk_plot.png", dpi = 100, height = 5, width = 7, units = "in") 
+
+# Percent of risk at a given % of missed run
+f_run_risk(preds, remove_dates)
+
+# Median, 25% and 75% quantiles of weir end date
+f_median_end_date(remove_dates)
+```
+
 ####Chilkoot River Sockeye Salmon Data
+Based on the deviance criterion of `r x` the Gompertz model was the preferred model to model the tails of the run. The parameter values by year were calculated (Figure 1). 
 
 ```{r fig4, echo=FALSE}
-include_graphics("figs/chilkoot/param_plot.png")
+include_graphics("../figs/chilkoot/param_plot.png")
 ```
 
-Figure 4: Figure A is the dropout percentage and trend line for the 2017 data. In 2017, 277 tagged fish were identified to fates with a 32.1% dropout rate. Figure B is the number of tagged fish that did not cross the border. The number above each point is the total sample size. For example, in statistical week 37, 4/9 fish (44% dropout rate) did not cross the border.
+Figure 4: Parameter estimates by year for the preferred model. 
+
 
 ```{r fig5}
-include_graphics("figs/chilkoot/preds_plot.png")
+include_graphics("../figs/chilkoot/preds_plot.png")
 ```
 
-Figure 5: Figure A is the dropout percentage and trend line for the 2017 data. In 2017, 277 tagged fish were identified to fates with a 32.1% dropout rate. Figure B is the number of tagged fish that did not cross the border. The number above each point is the total sample size. For example, in statistical week 37, 4/9 fish (44% dropout rate) did not cross the border.
+Figure 5: Cumulative escapement by julian date and year with modelled tails. 
 
 ```{r fig6}
-include_graphics("figs/chilkoot/risk_plot.png")
+include_graphics("../figs/chilkoot/risk_plot.png")
 ```
 
-Figure 6: Figure A is the dropout percentage and trend line for the 2017 data. In 2017, 277 tagged fish were identified to fates with a 32.1% dropout rate. Figure B is the number of tagged fish that did not cross the border. The number above each point is the total sample size. For example, in statistical week 37, 4/9 fish (44% dropout rate) did not cross the border.
+Figure 6: 
 
 #Recommendations
 
 
 ##References
-Andel, J., A. Foos, R. E. Brenner, B. Huebschwerlen, S. E. Miller, and A. W. Piston.  2018. Operational plan: Migration, tagging response, distribution, and inriver abundance of Taku River sockeye salmon. Alaska Department of Fish and Game, Division of Commercial Fisheries, Regional Operational Plan ROP.CF.1J.2018.01, Douglas.
-
-Andel, J., R.E. Brenner, and S.E. Miller. 2017. Migration, tagging response and distributism of sockeye salmon returning to the Taku River. Alaska Department of Fish and Game, Division of Commercial Fisheries, Regional Operational Plan ROP.CF.1J.2016.xx, Anchorage. (not published)
-
-Eiler, J. H., B. D. Nelson, and R. F. Bradshaw. 1992. Riverine spawning by sockeye salmon in the Taku River, Alaska and British Columbia. Transactions of the American Fisheries Society 121: 701-708.
-
-\pagebreak
-
- 
-\pagebreak
 
 \pagebreak
 ```{r sess_info, echo=FALSE}
