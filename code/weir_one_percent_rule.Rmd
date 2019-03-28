@@ -28,7 +28,8 @@ This is for a single species at a single weir. No other values or comments shoul
 added to the file. It should preferably be in .csv format. 
 
 ###Analysis
-The Gompertz model is written as $$p\mathrm{e}^{{-e}^{-k(t-t_0)}}$$ and the logistic model is written as $$\frac{p}{\mathrm{1+e}^{-k(t-t_0)}}.$$
+The Gompertz model is written as $$p\mathrm{e}^{{-e}^{-k(t-t_0)}}$$ and the logistic model is written as $$\frac{p}{\mathrm{1+e}^{-k(t-t_0)}}.$$ 
+IN the Gompertz model, p represents the asymptote of the cumulative escapement, k is the steepness of the curve, and t_0 is the inflection point of the curve. 
 
 
 For the analysis for each stock, all packages need to be loaded (see helper.r file) prior to running models. There are a set of 15 functions that need to be run in order.
