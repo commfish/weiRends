@@ -1,6 +1,6 @@
 ---
 title: "Weir One Percent Rule"
-author: "Ben Williams and Sara Miller (ben.williams.alaska.gov)"
+author: "Ben Williams, Sara Miller, and Sarah Power (ben.williams.alaska.gov)"
 date: "April 2019"
 output:
   pdf_document: default
