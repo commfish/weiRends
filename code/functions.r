@@ -122,11 +122,10 @@ f_preds <- function(data, model){
 }
 
 f_pred_plot <- function(preds){
-  
   preds %>% 
     ggplot(aes(julian, fit_cumsum, color = Year, group = Year)) +
     geom_line() +
-    geom_point(aes(y = cumsum), alpha= 0.15) +
+    geom_point(aes(y = cumsum), alpha= 0.15, pch=1) +
     scale_y_continuous(labels = comma) +
     xlab('\nJulian date') +
     ylab('Cumulative Escapement\n')
