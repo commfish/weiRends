@@ -44,14 +44,14 @@ f_summary(model_logistic)
 # <0.50 = model 2
 f_deviance(model, model_logistic)
 
-# get parameters
+# get parameters of preferred model
 f_params(model_logistic) -> params
 
 # plot parameter fits - because why not?
 # do any look out of place?
 f_param_plot(params)
 
-# predict the model on a complete dataset
+# predict the preferred model on a complete dataset
 f_preds(df, model_logistic) -> preds 
 
 # plot the predicted data
@@ -70,6 +70,9 @@ f_remove_dates(preds, run_through) -> remove_dates
 
 # Percent of the run that is caught at a given risk level
 f_run_caught(preds, remove_dates)
+
+# Number of years included in the percent of the run that is caught at a given risk level
+f_run_caught_n(preds, remove_dates)
 
 # plot of missed run and risk
 f_risk_plot(preds, remove_dates)
