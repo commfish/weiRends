@@ -314,7 +314,7 @@ f_run_caught(preds, remove_dates)
 f_risk_plot(preds, remove_dates)
 ggsave("figs/chilkoot/risk_plot.png", dpi = 100, height = 5, width = 7, units = "in") 
 
-# Percent of risk at a given % of missed run
+# Percent of risk at a given % of missed run (same as above?????)
 f_run_risk(preds, remove_dates)
 
 # Median, 25% and 75% quantiles of weir end date
