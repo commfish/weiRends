@@ -29,7 +29,7 @@ added to the file. It should preferably be in .csv format.
 
 ###Analysis
 The Gompertz model is written as $$p\mathrm{e}^{{-e}^{-k(t-t_0)}}$$ and the logistic model is written as $$\frac{p}{\mathrm{1+e}^{-k(t-t_0)}}.$$ 
-IN the Gompertz model, p represents the asymptote of the cumulative escapement, k is the steepness of the curve, and t_0 is the inflection point of the curve. 
+In the Gompertz model, p represents the asymptote of the cumulative escapement, k is the steepness of the curve, and t_0 is the inflection point of the curve. 
 
 
 For the analysis for each stock, all packages need to be loaded (see helper.r file) prior to running models. There are a set of 15 functions that need to be run in order.
@@ -63,7 +63,9 @@ source('code/functions.r')
 # data ----
 # data inputs are date (mm/dd/yyyy) and weir count
 
-read_csv("data/situk_weir_1988-2018.csv") %>% 
+read_csv('data/situk_weir_1988-2018.csv') %>% 
+  mutate (date = ifelse(stat_week == 24 & count == 35 & species =="Sockeye", "6/6/2016", date)) %>%      
+  mutate (date = ifelse(stat_week == 26 & count == 657 & species =="Sockeye", "6/22/2016", date)) %>%    
   filter(species=='Sockeye') %>% 
   dplyr::select(date, count) -> situk
 
@@ -87,8 +89,8 @@ f_summary(model_logistic)
 # which model performs better
 # >0.50 = model 1
 # <0.50 = model 2
-f_deviance(model, model_logistic) -> x
-x <- round(x, 2)# check model fits - did all models converge?
+f_deviance(model, model_logistic) -> dev
+dev <- round(dev, 2)# check model fits - did all models converge?
 
 # get parameters
 f_params(model) -> params
@@ -101,8 +103,46 @@ ggsave("figs/situk/param_plot.png", dpi = 100, height = 5, width = 7, units = "i
 f_preds(df, model) -> preds
 
 # plot the predicted data
-f_pred_plot( preds)
+f_pred_plot(preds)
 ggsave("figs/situk/preds_plot.png", dpi = 100, height = 5, width = 7, units = "in") 
+
+# plot in decadel scale so easier to read
+preds %>%
+  filter (year < 2001)-> year_subset
+f_pred_plot(year_subset)
+ggsave("figs/situk/preds_plot_decadel.png", dpi = 100, height = 5, width = 7, units = "in") 
+preds %>%
+  filter (year > 2000 )-> year_subset
+f_pred_plot(year_subset)
+ggsave("figs/situk/preds_plot_deacadel2.png", dpi = 100, height = 5, width = 7, units = "in") 
+
+# what is the minimum day that the weir should be in place?
+# the Julian date that 95% of the modeled run has been observed - on average
+f_run_through(df, preds) -> run_through
+
+#add figure that shows the average 95% (dotted vertical line) and 95% julian date by year
+# modeled date to 95% of run
+preds %>%
+  group_by(year) %>%
+  filter(fit_cumsum <= 0.95 * max(fit_cumsum)) %>%
+  summarise(run_95 = max(julian))-> x
+
+preds %>% 
+  group_by(year) %>%
+  left_join(x, .) %>% 
+  mutate(julian95 = ifelse(julian == run_95, fit_cumsum, "")) %>%  
+  mutate(julian95= as.numeric(julian95))-> preds_95
+
+  preds_95 %>% 
+    ggplot(aes(julian, fit_cumsum, color = Year, group = Year)) +
+    geom_line() +
+    geom_point(aes(y = cumsum), alpha= 0.15, pch=16) +
+    geom_point(aes(y = julian95), alpha= 0.90, pch=8) +
+    scale_y_continuous(labels = comma) +
+    geom_vline(xintercept=run_through, lty=2) +
+    xlab('\nJulian date') +
+    ylab('Cumulative Escapement\n')
+  ggsave("figs/situk/preds_plot95.png", dpi = 100, height = 5, width = 7, units = "in") 
 
 # what is the minimum day that the weir should be in place?
 # the Julian date that 95% of the modeled run has been observed - on average
@@ -131,7 +171,7 @@ f_median_end_date(remove_dates)
 
 ##Results
 ####Situk River Sockeye Salmon Data
-Based on the deviance criterion of `r x` the Gompertz model was the preferred model to model the tails of the run. The julian date that that 95% of the modeled run has been observed - on average is `r run_through` (`r real_day`).
+Based on the deviance criterion of `r dev` the Gompertz model was the preferred model to model the tails of the run. The julian date that 95% of the modeled run has been observed - on average is `r run_through` (`r real_day`).
 
 
 ```{r fig1, echo=FALSE}
@@ -142,7 +182,7 @@ Figure 1: Parameter estimates by year for the preferred model.
 \pagebreak
 
 ```{r fig2}
-include_graphics("../figs/situk/preds_plot.png")
+include_graphics("../figs/situk/preds_plot95.png")
 ```
 
 Figure 2: Cumulative escapement by julian date and year with modelled tails. 
@@ -153,7 +193,11 @@ include_graphics("../figs/situk/risk_plot.png")
 ```
 
 Figure 3: 
-\pagebreak
+  \pagebreak
+
+
+
+
 
 ```{r deviance_Chilkoot, echo=F, warning=F, message=F, error=F, include =F}
 # load ----
@@ -187,8 +231,8 @@ f_summary(model_logistic)
 # which model performs better
 # >0.50 = model 1
 # <0.50 = model 2
-f_deviance(model, model_logistic)-> y
-y <- round(x, y)# check model fits - did all models converge?
+f_deviance(model, model_logistic)-> dev2
+dev2 <- round(dev2, 2)# check model fits - did all models converge?
 
 # get parameters
 f_params(model_logistic) -> params
@@ -204,6 +248,53 @@ f_preds(df, model_logistic) -> preds
 # plot the predicted data
 f_pred_plot(preds)
 ggsave("figs/chilkoot/preds_plot.png", dpi = 100, height = 5, width = 7, units = "in") 
+
+# plot the predicted data
+f_pred_plot(preds)
+
+# plot in decadel scale so easier to read
+preds %>%
+  filter (year< 1990)-> year_subset
+f_pred_plot(year_subset)
+ggsave("figs/chilkoot/preds_plot_decadel.png", dpi = 100, height = 5, width = 7, units = "in") 
+
+preds %>%
+  filter (year > 1989 & year < 2000 )-> year_subset
+f_pred_plot(year_subset)
+ggsave("figs/chilkoot/preds_plot_deacadel2.png", dpi = 100, height = 5, width = 7, units = "in")
+
+preds %>%
+  filter (year > 1999 )-> year_subset
+f_pred_plot(year_subset)
+ggsave("figs/chilkoot/preds_plot_deacadel3.png", dpi = 100, height = 5, width = 7, units = "in") 
+
+# what is the minimum day that the weir should be in place?
+# the Julian date that 95% of the modeled run has been observed - on average
+f_run_through(df, preds) -> run_through
+
+#add figure that shows the average 95% (dotted vertical line) and 95% julian date by year
+# modeled date to 95% of run
+preds %>%
+  group_by(year) %>%
+  filter(fit_cumsum <= 0.95 * max(fit_cumsum)) %>%
+  summarise(run_95 = max(julian))-> x
+
+preds %>% 
+  group_by(year) %>%
+  left_join(x, .) %>% 
+  mutate(julian95 = ifelse(julian == run_95, fit_cumsum, "")) %>%  
+  mutate(julian95= as.numeric(julian95))-> preds_95
+
+preds_95 %>% 
+  ggplot(aes(julian, fit_cumsum, color = Year, group = Year)) +
+  geom_line() +
+  geom_point(aes(y = cumsum), alpha= 0.15, pch=16) +
+  geom_point(aes(y = julian95), alpha= 0.90, pch=8) +
+  scale_y_continuous(labels = comma) +
+  geom_vline(xintercept=run_through, lty=2) +
+  xlab('\nJulian date') +
+  ylab('Cumulative Escapement\n')
+ggsave("figs/chilkoot/preds_plot95.png", dpi = 100, height = 5, width = 7, units = "in") 
 
 # what is the minimum day that the weir should be in place?
 # the Julian date that 95% of the modeled run has been observed - on average
@@ -231,7 +322,7 @@ f_median_end_date(remove_dates)
 ```
 
 ####Chilkoot River Sockeye Salmon Data
-Based on the deviance criterion of `r y` the logistic model was the preferred model to model the tails of the run. The julian date that that 95% of the modeled run has been observed - on average is `r run_through` (`r real_day`).
+Based on the deviance criterion of `r dev2` the logistic model was the preferred model to model the tails of the run. The julian date that that 95% of the modeled run has been observed - on average is `r run_through` (`r real_day`).
 
 ```{r fig4, echo=FALSE}
 include_graphics("../figs/chilkoot/param_plot.png")
@@ -241,7 +332,7 @@ Figure 4: Parameter estimates by year for the preferred model.
 
 
 ```{r fig5}
-include_graphics("../figs/chilkoot/preds_plot.png")
+include_graphics("../figs/chilkoot/preds_plot95.png")
 ```
 
 Figure 5: Cumulative escapement by julian date and year with modelled tails. 
@@ -251,13 +342,12 @@ include_graphics("../figs/chilkoot/risk_plot.png")
 ```
 
 Figure 6: 
-
+  
 #Recommendations
-
-
-
-
-\pagebreak
+  
+  
+  
+  \pagebreak
 ```{r sess_info, echo=FALSE}
 #sessionInfo()
 ```

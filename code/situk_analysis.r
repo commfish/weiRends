@@ -19,6 +19,8 @@ source('code/functions.r')
 # data inputs are date (mm/dd/yyyy) and weir count
 
 read_csv('data/situk_weir_1988-2018.csv') %>% 
+  mutate (date = ifelse(stat_week == 24 & count == 35 & species =="Sockeye", "6/6/2016", date)) %>%      
+  mutate (date = ifelse(stat_week == 26 & count == 657 & species =="Sockeye", "6/22/2016", date)) %>%    
   filter(species=='Sockeye') %>% 
   dplyr::select(date, count) -> situk
 
@@ -44,21 +46,17 @@ f_summary(model_logistic)
 # <0.50 = model 2
 f_deviance(model, model_logistic) # check model fits - did all models converge?
 
-# get parameters
+# get parameters of preferred model
 f_params(model) -> params
 
 # plot parameter fits - because why not?
 f_param_plot(params)
 
-# predict the model on a complete dataset
+# predict the preferred model on a complete dataset
 f_preds(df, model) -> preds
 
 # plot the predicted data
 f_pred_plot( preds)
-
-# what is the minimum day that the weir should be in place?
-# the Julian date that 95% of the modeled run has been observed - on average
-f_run_through(df, preds) -> run_through
 
 # the date in a more informative format
 f_real_day(run_through)  
