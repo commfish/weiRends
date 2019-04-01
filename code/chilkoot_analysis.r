@@ -97,16 +97,20 @@ ggsave("figs/chilkoot/preds_plot95.png", dpi = 100, height = 5, width = 7, units
 f_remove_dates(preds, run_through) -> remove_dates
 
 # Percent of the run that is caught at a given risk level
-f_run_caught(preds, remove_dates)
+f_run_caught(preds, remove_dates) -> run_caught_chilkoot
+write.csv(run_caught_chilkoot, "data/processed/run_caught_chilkoot.csv")
 
 # Number of years included in the percent of the run that is caught at a given risk level
-f_run_caught_n(preds, remove_dates)
+f_run_caught_n(preds, remove_dates) -> run_caughtn_chilkoot
+write.csv(run_caughtn_chilkoot, "data/processed/run_caughtn_chilkoot.csv")
 
 # plot of missed run and risk
 f_risk_plot(preds, remove_dates)
 
 # Percent of risk at a given % of missed run
-f_run_risk(preds, remove_dates)
+f_run_risk(preds, remove_dates) -> run_risk_chilkoot
+write.csv(run_risk_chilkoot, "data/processed/run_risk_chilkoot.csv")
 
 # Median, 25% and 75% quantiles of weir end date
-f_median_end_date(remove_dates)
+f_median_end_date(remove_dates) -> median_end_date_chilkoot
+write.csv(median_end_date_chilkoot, "data/processed/median_end_date_chilkoot.csv")

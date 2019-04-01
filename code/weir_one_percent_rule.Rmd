@@ -71,6 +71,34 @@ run_through <- as.data.frame(run_through[1,2])
 ####Situk River Sockeye Salmon Data
 Based on the deviance criterion of `r dev`, the Gompertz model was the preferred model to model the tails of the run. The julian date that 95% of the modeled run has been observed - on average is julian day `r run_through` (`r real_day`).
 
+```{r table1, echo=FALSE}
+read_csv('data/processed/run_caught_situk.csv') -> run_caught
+kable(run_caught)
+```
+
+Table:
+
+```{r table1a, echo=FALSE}
+read_csv('data/processed/run_caughtn_situk.csv') -> run_caughtn
+kable(run_caughtnn)
+```
+
+Table:
+
+```{r table1b, echo=FALSE}
+read_csv('data/processed/run_risk_situk.csv') -> run_risk
+kable(run_risk)
+```
+
+Table:
+
+```{r table1c, echo=FALSE}
+read_csv('data/processed/median_end_date_situk.csv') -> median
+kable(median)
+```
+
+Table:
+
 
 ```{r fig1, echo=FALSE}
 include_graphics("../figs/situk/param_plot.png")
@@ -99,6 +127,7 @@ source('code/functions.r')
 read_csv('data/processed/chilkoot_run_through.csv') -> run_through
 read_csv('data/processed/chilkoot_real_day.csv') -> real_day
 read_csv('data/processed/chilkoot_dev.csv') -> dev
+
 dev <- round(as.data.frame(dev[1,2]),2)
 real_day <- as.data.frame(real_day[1,2])
 run_through <- as.data.frame(run_through[1,2])
@@ -106,6 +135,34 @@ run_through <- as.data.frame(run_through[1,2])
 
 ####Chilkoot River Sockeye Salmon Data
 Based on the deviance criterion of `r dev`, the logistic model was the preferred model to model the tails of the run. The julian date that that 95% of the modeled run has been observed - on average is `r run_through` (`r real_day`).
+
+```{r table1, echo=FALSE}
+read_csv('data/processed/run_caught_chilkoot.csv') -> run_caught
+kable(run_caught)
+```
+
+Table:
+
+```{r table1a, echo=FALSE}
+read_csv('data/processed/run_caughtn_chilkoot.csv') -> run_caughtn
+kable(run_caughtnn)
+```
+
+Table:
+
+```{r table1b, echo=FALSE}
+read_csv('data/processed/run_risk_chilkoot.csv') -> run_risk
+kable(run_risk)
+```
+
+Table:
+
+```{r table1c, echo=FALSE}
+read_csv('data/processed/median_end_date_chilkoot.csv') -> median
+kable(median)
+```
+
+Table:
 
 ```{r fig4, echo=FALSE}
 include_graphics("../figs/chilkoot/param_plot.png")

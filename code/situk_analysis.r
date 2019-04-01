@@ -92,17 +92,21 @@ ggsave("figs/situk/preds_plot95.png", dpi = 100, height = 5, width = 7, units = 
 f_remove_dates(preds, run_through) -> remove_dates
 
 # Percent of the run that is caught at a given risk level
-f_run_caught(preds, remove_dates)
+f_run_caught(preds, remove_dates) -> run_caught_situk
+write.csv(run_caught_situk, "data/processed/run_caught_situk.csv")
 
 # Number of years included in the percent of the run that is caught at a given risk level
-f_run_caught_n(preds, remove_dates)
+f_run_caught_n(preds, remove_dates)-> run_caughtn_situk
+write.csv(run_caughtn_situk, "data/processed/run_caughtn_situk.csv")
 
 # plot of missed run and risk
 f_risk_plot(preds, remove_dates)
 ggsave("figs/situk/risk_plot.png", dpi = 100, height = 5, width = 7, units = "in") 
 
 # Percent of risk at a given % of missed run
-f_run_risk(preds, remove_dates)
+f_run_risk(preds, remove_dates) -> run_risk_situk
+write.csv(run_risk_situk, "data/processed/run_risk_situk.csv")
 
 # Median, 25% and 75% quantiles of weir end date
-f_median_end_date(remove_dates)
+f_median_end_date(remove_dates) -> median_end_date_situk
+write.csv(median_end_date_situk, "data/processed/median_end_date_situk.csv")
