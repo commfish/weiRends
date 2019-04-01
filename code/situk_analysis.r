@@ -45,6 +45,7 @@ f_summary(model_logistic)
 # >0.50 = model 1
 # <0.50 = model 2
 f_deviance(model, model_logistic) -> dev # check model fits - did all models converge?
+dev <-  as.data.frame(dev)
 write.csv(dev, "data/processed/situk_dev.csv")
 
 # get parameters of preferred model
@@ -74,11 +75,13 @@ ggsave("figs/situk/preds_plot_deacadel2.png", dpi = 100, height = 5, width = 7, 
 # what is the minimum day that the weir should be in place?
 # the Julian date that 95% of the modeled run has been observed - on average
 f_run_through(df, preds) -> run_through
-write.csv(run_through, "data/processed/situk_run_through.csv")
+run_through_situk <-  as.data.frame(run_through)
+write.csv(run_through_situk, "data/processed/situk_run_through.csv")
 
 # the date in a more informative format
 f_real_day(run_through) -> real_day 
-write.csv(real_day, "data/processed/situk_real_day.csv")
+real_day_situk <-  as.data.frame(real_day)
+write.csv(real_day_situk, "data/processed/situk_real_day.csv")
 
 #add figure that shows the average 95% (dotted vertical line) and 95% julian date by year (star)
 f_preds_plot95(preds, run_through) 
