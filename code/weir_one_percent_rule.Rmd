@@ -53,7 +53,7 @@ For the analysis for each stock, all packages need to be loaded (see helper.r fi
 Each *stock*_analysis.r file sources the same functions and helper files.
 
 ##Methods
-The Situk River (years 1988-2018) and Chilkoot Lake (years 1976-2018) sockeye salmon weir data were analyzed to determine the hard ending date the weir is required to be operated based on capturing 95% of the escapement on average using hoistorical data. Then, a risk anlysis was performed by calculating the percent of missed counts based on whether the project was operated past the hard ending date until daily counts equaled less than 1% of the cumulative count for 3, 4, or 5 days in a row. 
+The Situk River (years 1988-2018) and Chilkoot Lake (years 1976-2018) sockeye salmon weir data were analyzed to determine the hard ending date the weir is required to be operated based on capturing 95% of the escapement, on average, using historical data. Then, a risk anlysis was performed by calculating the percent of missed counts based on whether the project was operated past the hard ending date until daily counts equaled less than 1% of the cumulative count for 3, 4, or 5 days in a row. 
 
 ```{r situk_results}
 source('code/helper.r')
@@ -69,36 +69,35 @@ run_through <- as.data.frame(run_through[1,2])
 
 ##Results
 ####Situk River Sockeye Salmon Data
-Based on the deviance criterion of `r dev`, the Gompertz model was the preferred model to model the tails of the run. The julian date that 95% of the modeled run has been observed - on average is julian day `r run_through` (`r real_day`).
+Based on the deviance criterion of `r dev`, the Gompertz model was the preferred model to model the tails of the run. The julian date that 95% of the modeled run has been observed, on average, is julian day `r run_through` (`r real_day`).
 
+Table 1: The percent of the run that is caught at a given risk level. 
 ```{r table1, echo=FALSE}
 read_csv('data/processed/run_caught_situk.csv') -> run_caught
+run_caught <- as.data.frame(run_caught[,-1])
 kable(run_caught)
 ```
 
-Table:
-
-```{r table1a, echo=FALSE}
+Table 2: The number of years of data included in the percent of the run that is caught at a given risk level. 
+```{r table2, echo=FALSE}
 read_csv('data/processed/run_caughtn_situk.csv') -> run_caughtn
-kable(run_caughtnn)
+run_caughtn <- as.data.frame(run_caughtn[,-1])
+kable(run_caughtn)
 ```
 
-Table:
-
-```{r table1b, echo=FALSE}
+Table 3: The percent of missed run at a given level of risk (the inverse of table 1). The data from this table is shown in figure 3.
+```{r table3, echo=FALSE}
 read_csv('data/processed/run_risk_situk.csv') -> run_risk
+run_risk <- as.data.frame(run_risk[,-1])
 kable(run_risk)
 ```
 
-Table:
-
-```{r table1c, echo=FALSE}
+Table 4: The median, 25%, and 75% quantiles of weir removal dates (julian day) based on the 1% rules.
+```{r table4, echo=FALSE}
 read_csv('data/processed/median_end_date_situk.csv') -> median
+median <- as.data.frame(median[,-1])
 kable(median)
 ```
-
-Table:
-
 
 ```{r fig1, echo=FALSE}
 include_graphics("../figs/situk/param_plot.png")
@@ -111,14 +110,14 @@ Figure 1: Parameter estimates by year for the preferred model.
 include_graphics("../figs/situk/preds_plot95.png")
 ```
 
-Figure 2: Cumulative escapement by julian date and year with modelled tails. 
+Figure 2: Cumulative escapement by julian date and year with modeled tails. The average 95% (dotted vertical line) and 95% julian date by year (star) are shown. The circles are data.  
 \pagebreak
 
 ```{r fig3}
 include_graphics("../figs/situk/risk_plot.png")
 ```
 
-Figure 3: 
+Figure 3: The percent of missed run at a given level of risk. The data are shown in table 3.
   \pagebreak
 
 ```{r chilkoot_results}
@@ -136,52 +135,55 @@ run_through <- as.data.frame(run_through[1,2])
 ####Chilkoot River Sockeye Salmon Data
 Based on the deviance criterion of `r dev`, the logistic model was the preferred model to model the tails of the run. The julian date that that 95% of the modeled run has been observed - on average is `r run_through` (`r real_day`).
 
-```{r table1, echo=FALSE}
+Table 5: The percent of the run that is caught at a given risk level. 
+```{r table5, echo=FALSE}
 read_csv('data/processed/run_caught_chilkoot.csv') -> run_caught
+run_caught <- as.data.frame(run_caught[,-1])
 kable(run_caught)
 ```
 
-Table:
-
-```{r table1a, echo=FALSE}
+Table 6: The number of years of data included in the percent of the run that is caught at a given risk level. 
+```{r table6, echo=FALSE}
 read_csv('data/processed/run_caughtn_chilkoot.csv') -> run_caughtn
-kable(run_caughtnn)
+run_caughtn <- as.data.frame(run_caughtn[,-1])
+kable(run_caughtn)
 ```
 
-Table:
-
-```{r table1b, echo=FALSE}
+Table 7: The percent of missed run at a given level of risk (the inverse of table 1). The data from this table is shown in figure 3.
+```{r table7, echo=FALSE}
 read_csv('data/processed/run_risk_chilkoot.csv') -> run_risk
+run_risk <- as.data.frame(run_risk[,-1])
 kable(run_risk)
 ```
 
-Table:
-
-```{r table1c, echo=FALSE}
+Table 8: The median, 25%, and 75% quantiles of weir removal dates (julian day) based on the 1% rules.
+```{r table8, echo=FALSE}
 read_csv('data/processed/median_end_date_chilkoot.csv') -> median
+median <- as.data.frame(median[,-1])
 kable(median)
 ```
-
-Table:
 
 ```{r fig4, echo=FALSE}
 include_graphics("../figs/chilkoot/param_plot.png")
 ```
 
 Figure 4: Parameter estimates by year for the preferred model. 
-
+\pagebreak
 
 ```{r fig5}
 include_graphics("../figs/chilkoot/preds_plot95.png")
 ```
 
-Figure 5: Cumulative escapement by julian date and year with modelled tails. 
+Figure 5: Cumulative escapement by julian date and year with modeled tails. The average 95% (dotted vertical line) and 95% julian date by year (star) are shown. The circles are data.  
+\pagebreak
 
 ```{r fig6}
 include_graphics("../figs/chilkoot/risk_plot.png")
 ```
 
-Figure 6: 
+Figure 6: The percent of missed run at a given level of risk. The data are shown in table 3.
+  \pagebreak
+
   
 #Recommendations
   
