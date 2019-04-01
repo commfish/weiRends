@@ -166,6 +166,30 @@ f_real_day <- function(run_through){
   
 }
 
+f_preds_plot95 <- function(preds, run_through){
+  preds %>%
+    group_by(year) %>%
+    filter(fit_cumsum <= 0.95 * max(fit_cumsum)) %>%
+    summarise(run_95 = max(julian))-> x
+
+  preds %>% 
+    group_by(year) %>%
+    left_join(x, .) %>% 
+    mutate(julian95 = ifelse(julian == run_95, fit_cumsum, "")) %>%  
+    mutate(julian95= as.numeric(julian95))-> preds_95
+
+  preds_95 %>% 
+    ggplot(aes(julian, fit_cumsum, color = Year, group = Year)) +
+    geom_line() +
+    geom_point(aes(y = cumsum), alpha= 0.15, pch=16) +
+    geom_point(aes(y = julian95), alpha= 0.90, pch=8) +
+    scale_y_continuous(labels = comma) +
+    geom_vline(xintercept=run_through, lty=2) +
+    xlab('\nJulian date') +
+    ylab('Cumulative Escapement\n')
+}
+
+
 f_remove_dates <- function(preds, run_through){
   
   preds %>%

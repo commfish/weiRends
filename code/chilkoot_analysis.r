@@ -42,7 +42,8 @@ f_summary(model_logistic)
 # which model performs better
 # >0.50 = model 1
 # <0.50 = model 2
-f_deviance(model, model_logistic)
+f_deviance(model, model_logistic) -> dev # check model fits - did all models converge?
+write.csv(dev, "data/processed/chilkoot_dev.csv")
 
 # get parameters of preferred model
 f_params(model_logistic) -> params
@@ -50,12 +51,30 @@ f_params(model_logistic) -> params
 # plot parameter fits - because why not?
 # do any look out of place?
 f_param_plot(params)
+ggsave("figs/chilkoot/param_plot.png", dpi = 100, height = 5, width = 7, units = "in") 
 
 # predict the preferred model on a complete dataset
 f_preds(df, model_logistic) -> preds 
 
 # plot the predicted data
 f_pred_plot(preds)
+ggsave("figs/chilkoot/preds_plot.png", dpi = 100, height = 5, width = 7, units = "in") 
+
+# plot in decadel scale so easier to read
+preds %>%
+  filter (year< 1990)-> year_subset
+f_pred_plot(year_subset)
+ggsave("figs/chilkoot/preds_plot_decadel.png", dpi = 100, height = 5, width = 7, units = "in") 
+
+preds %>%
+  filter (year > 1989 & year < 2000 )-> year_subset
+f_pred_plot(year_subset)
+ggsave("figs/chilkoot/preds_plot_deacadel2.png", dpi = 100, height = 5, width = 7, units = "in")
+
+preds %>%
+  filter (year > 1999 )-> year_subset
+f_pred_plot(year_subset)
+ggsave("figs/chilkoot/preds_plot_deacadel3.png", dpi = 100, height = 5, width = 7, units = "in") 
 
 # what is the minimum day that the weir should be in place?
 # the Julian date that 95% of the modeled run has been observed - on average
@@ -63,6 +82,10 @@ f_run_through(df, preds) -> run_through
 
 # the date in a more informative format
 f_real_day(run_through)  
+
+#add figure that shows the average 95% (dotted vertical line) and 95% julian date by year (star)
+f_preds_plot95(preds, run_through) 
+ggsave("figs/chilkoot/preds_plot95.png", dpi = 100, height = 5, width = 7, units = "in") 
 
 # dates the weirs would be removed based upon 1% rule
 # for 5,4,3, or 2 days

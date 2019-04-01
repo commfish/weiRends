@@ -44,22 +44,45 @@ f_summary(model_logistic)
 # which model performs better
 # >0.50 = model 1
 # <0.50 = model 2
-f_deviance(model, model_logistic) # check model fits - did all models converge?
+f_deviance(model, model_logistic) -> dev # check model fits - did all models converge?
+write.csv(dev, "data/processed/situk_dev.csv")
 
 # get parameters of preferred model
 f_params(model) -> params
 
 # plot parameter fits - because why not?
 f_param_plot(params)
+ggsave("figs/situk/param_plot.png", dpi = 100, height = 5, width = 7, units = "in") 
 
 # predict the preferred model on a complete dataset
 f_preds(df, model) -> preds
 
 # plot the predicted data
 f_pred_plot( preds)
+ggsave("figs/situk/preds_plot.png", dpi = 100, height = 5, width = 7, units = "in") 
+
+# plot in decadel scale so easier to read
+preds %>%
+  filter (year < 2001)-> year_subset
+f_pred_plot(year_subset)
+ggsave("figs/situk/preds_plot_decadel.png", dpi = 100, height = 5, width = 7, units = "in") 
+preds %>%
+  filter (year > 2000 )-> year_subset
+f_pred_plot(year_subset)
+ggsave("figs/situk/preds_plot_deacadel2.png", dpi = 100, height = 5, width = 7, units = "in") 
+
+# what is the minimum day that the weir should be in place?
+# the Julian date that 95% of the modeled run has been observed - on average
+f_run_through(df, preds) -> run_through
+write.csv(run_through, "data/processed/situk_run_through.csv")
 
 # the date in a more informative format
-f_real_day(run_through)  
+f_real_day(run_through) -> real_day 
+write.csv(real_day, "data/processed/situk_real_day.csv")
+
+#add figure that shows the average 95% (dotted vertical line) and 95% julian date by year (star)
+f_preds_plot95(preds, run_through) 
+ggsave("figs/situk/preds_plot95.png", dpi = 100, height = 5, width = 7, units = "in") 
 
 # dates the weirs would be removed based upon 1% rule
 # for 5,4,3, or 2 days
@@ -73,6 +96,7 @@ f_run_caught_n(preds, remove_dates)
 
 # plot of missed run and risk
 f_risk_plot(preds, remove_dates)
+ggsave("figs/situk/risk_plot.png", dpi = 100, height = 5, width = 7, units = "in") 
 
 # Percent of risk at a given % of missed run
 f_run_risk(preds, remove_dates)
