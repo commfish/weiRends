@@ -99,7 +99,7 @@ write.csv(run_caught_situk, "data/processed/run_caught_situk.csv")
 f_run_caught_n(preds, remove_dates)-> run_caughtn_situk
 write.csv(run_caughtn_situk, "data/processed/run_caughtn_situk.csv")
 
-# plot of missed run and risk
+# plot of missed run and risk (based on the output from f_run_caught)
 f_risk_plot(preds, remove_dates)
 ggsave("figs/situk/risk_plot.png", dpi = 100, height = 5, width = 7, units = "in") 
 

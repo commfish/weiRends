@@ -104,7 +104,7 @@ write.csv(run_caught_chilkoot, "data/processed/run_caught_chilkoot.csv")
 f_run_caught_n(preds, remove_dates) -> run_caughtn_chilkoot
 write.csv(run_caughtn_chilkoot, "data/processed/run_caughtn_chilkoot.csv")
 
-# plot of missed run and risk
+# plot of missed run and risk (based on the output from f_run_caught)
 f_risk_plot(preds, remove_dates)
 
 # Percent of risk at a given % of missed run

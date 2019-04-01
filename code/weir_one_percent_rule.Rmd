@@ -32,7 +32,7 @@ The Gompertz model is written as $$p\mathrm{e}^{{-e}^{-k(t-t_0)}}$$ and the logi
 In the Gompertz model, p represents the asymptote of the cumulative escapement, k is the steepness of the curve, and t~0~ is the inflection point of the curve. 
 
 
-For the analysis for each stock, all packages need to be loaded (see helper.r file) prior to running models. There are a set of 15 functions that need to be run in order.
+For the analysis for each stock, all packages need to be loaded (see helper.r file) prior to running models. There are a set of 17 functions that need to be run in order.
 
 1. f_clean_data = formats data for modeling
 2. f_gomp_model = runs a Gompertz model for each year
@@ -45,10 +45,12 @@ For the analysis for each stock, all packages need to be loaded (see helper.r fi
 9. f_pred_plot = examine predictions
 10. f_run_through = the weir should be in place through this date
 11. f_real_day = change julian date to a date people can understand
-12. f_run_caught = percent of the run that is caught at a given risk level
-13. f_risk_plot = percent of missed run at a given level of risk (the inverse of # 12)
-14. f_run_risk = percent of risk at a given percent of missed run
-15. f_median_end_dates = median, 25%, and 75% quantiles of weir removal dates (julian) for 1% rules
+12. f_preds_plot95 = examine predictions and 95% cut-off date
+13. f_run_caught = percent of the run that is caught at a given risk level
+14. f_run_caught_n = number of years included in the percent of the run that is caught at a given risk level
+15. f_risk_plot = percent of missed run at a given level of risk (the inverse of # 13)
+16. f_run_risk = percent of risk at a given percent of missed run
+17. f_median_end_dates = median, 25%, and 75% quantiles of weir removal dates (julian) for 1% rules
 
 Each *stock*_analysis.r file sources the same functions and helper files.
 
@@ -71,7 +73,7 @@ run_through <- as.data.frame(run_through[1,2])
 ####Situk River Sockeye Salmon Data
 Based on the deviance criterion of `r dev`, the Gompertz model was the preferred model to model the tails of the run. The julian date that 95% of the modeled run has been observed, on average, is julian day `r run_through` (`r real_day`).
 
-Table 1: The percent of the run that is caught at a given risk level. 
+Table 1: The percent of the run that is caught at a given risk level. The data from this table are plotted in figure 3.
 ```{r table1, echo=FALSE}
 read_csv('data/processed/run_caught_situk.csv') -> run_caught
 run_caught <- as.data.frame(run_caught[,-1])
@@ -85,7 +87,7 @@ run_caughtn <- as.data.frame(run_caughtn[,-1])
 kable(run_caughtn)
 ```
 
-Table 3: The percent of missed run at a given level of risk (the inverse of table 1). The data from this table is shown in figure 3.
+Table 3: The percent of missed run at a given level of risk (the inverse of table 1). 
 ```{r table3, echo=FALSE}
 read_csv('data/processed/run_risk_situk.csv') -> run_risk
 run_risk <- as.data.frame(run_risk[,-1])
@@ -117,7 +119,7 @@ Figure 2: Cumulative escapement by julian date and year with modeled tails. The 
 include_graphics("../figs/situk/risk_plot.png")
 ```
 
-Figure 3: The percent of missed run at a given level of risk. The data are shown in table 3.
+Figure 3: The percent of missed run at a given level of risk. The data are shown in table 1.
   \pagebreak
 
 ```{r chilkoot_results}
@@ -126,16 +128,15 @@ source('code/functions.r')
 read_csv('data/processed/chilkoot_run_through.csv') -> run_through
 read_csv('data/processed/chilkoot_real_day.csv') -> real_day
 read_csv('data/processed/chilkoot_dev.csv') -> dev
-
 dev <- round(as.data.frame(dev[1,2]),2)
 real_day <- as.data.frame(real_day[1,2])
 run_through <- as.data.frame(run_through[1,2])
 ```
 
 ####Chilkoot River Sockeye Salmon Data
-Based on the deviance criterion of `r dev`, the logistic model was the preferred model to model the tails of the run. The julian date that that 95% of the modeled run has been observed - on average is `r run_through` (`r real_day`).
+Based on the deviance criterion of `r dev`, the logistic model was the preferred model to model the tails of the run. The julian date that that 95% of the modeled run has been observed, on average, is `r run_through` (`r real_day`).
 
-Table 5: The percent of the run that is caught at a given risk level. 
+Table 5: The percent of the run that is caught at a given risk level. The data are plotted in figure 6.
 ```{r table5, echo=FALSE}
 read_csv('data/processed/run_caught_chilkoot.csv') -> run_caught
 run_caught <- as.data.frame(run_caught[,-1])
@@ -181,7 +182,7 @@ Figure 5: Cumulative escapement by julian date and year with modeled tails. The 
 include_graphics("../figs/chilkoot/risk_plot.png")
 ```
 
-Figure 6: The percent of missed run at a given level of risk. The data are shown in table 3.
+Figure 6: The percent of missed run at a given level of risk. The data are shown in table 5.
   \pagebreak
 
   
