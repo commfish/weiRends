@@ -73,7 +73,7 @@ run_through <- as.data.frame(run_through[1,2])
 ####Situk River Sockeye Salmon Data
 Based on the deviance criterion of `r dev`, the Gompertz model was the preferred model to model the tails of the run. The julian date that 95% of the modeled run has been observed, on average, is julian day `r run_through` (`r real_day`).
 
-Table 1: The percent of the run that is caught at a given risk level. The data from this table are plotted in figure 3.
+Table 1: The percent of the run that is caught at a given risk level. The data from this table are plotted in figure 3 as the percent of missed run at a given level of risk
 ```{r table1, echo=FALSE}
 read_csv('data/processed/run_caught_situk.csv') -> run_caught
 run_caught <- as.data.frame(run_caught[,-1])
@@ -136,7 +136,7 @@ run_through <- as.data.frame(run_through[1,2])
 ####Chilkoot River Sockeye Salmon Data
 Based on the deviance criterion of `r dev`, the logistic model was the preferred model to model the tails of the run. The julian date that that 95% of the modeled run has been observed, on average, is `r run_through` (`r real_day`).
 
-Table 5: The percent of the run that is caught at a given risk level. The data are plotted in figure 6.
+Table 5: The percent of the run that is caught at a given risk level. The data from this table are plotted in figure 6 as the percent of missed run at a given level of risk.
 ```{r table5, echo=FALSE}
 read_csv('data/processed/run_caught_chilkoot.csv') -> run_caught
 run_caught <- as.data.frame(run_caught[,-1])
@@ -150,7 +150,7 @@ run_caughtn <- as.data.frame(run_caughtn[,-1])
 kable(run_caughtn)
 ```
 
-Table 7: The percent of missed run at a given level of risk (the inverse of table 1). The data from this table is shown in figure 3.
+Table 7: The percent of missed run at a given level of risk (the inverse of table 5). 
 ```{r table7, echo=FALSE}
 read_csv('data/processed/run_risk_chilkoot.csv') -> run_risk
 run_risk <- as.data.frame(run_risk[,-1])
