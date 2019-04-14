@@ -99,7 +99,7 @@ f_param_plot <- function(params){
     geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3) +
     facet_wrap(~term, scales = 'free_y') -> x
   
-  ggsave(paste0('figs/', folder, "/param_plot.png"), x, dpi = 100, height = 8.5, width = 6.5, units = "in") 
+  ggsave(paste0('figs/', folder, "/param_plot.png"), x, dpi = 100, height = 5, width = 6.5, units = "in") 
   
   x
   
@@ -155,7 +155,8 @@ f_pred_plot <- function(preds, run_through){
     xlab('\nJulian date') +
     ylab('Cumulative Escapement\n') -> x
   
-  ggsave(paste0('figs/', folder, "/pred_plot.png"), plot = x, dpi = 100, height = 8.5, width = 6.5, units = "in") 
+  ggsave(paste0('figs/', folder, "/pred_plot.png"), plot = x, dpi = 100, 
+         height = 5, width = 6.5, units = "in") 
   
   x
 }
@@ -188,7 +189,8 @@ f_pred_plot_decade <- function(preds, run_through){
     ylab('Cumulative Escapement\n') +
     facet_wrap(~decade, dir = 'v') -> x
   
-  ggsave(paste0('figs/', folder, "/pred_plot_decade.png"), plot = x, dpi = 100, height = 8.5, width = 6.5, units = "in") 
+  ggsave(paste0('figs/', folder, "/pred_plot_decade.png"), plot = x, dpi = 100, 
+         height = 5, width = 6.5, units = "in") 
   
   x
 
@@ -205,25 +207,7 @@ f_run_through <- function(data, preds){
     summarise(end_date = round(mean(run_95))) %>% 
     mutate(date = as.Date(strptime(paste(year(Sys.Date()), end_date, sep='-'), "%Y-%j"))) %T>% 
     write_csv(., paste0('output/', folder, '/run_through.csv'))
-  # -> x
-  
-  # # observed date at 95% of run
-  # data %>%
-  #   group_by(year) %>%
-  #   filter(cumsum <= max(cumsum, na.rm = T) * 0.95) %>%
-  #   summarise(run_95 = max(julian)) %>%
-  #   summarise(min(run_95)) %>% 
-  #   ungroup %>%
-  #   summarise(end_date = round(mean(run_95))) %>% .$end_date -> y
-  # 
-  # z <- round((x + y) / 2)
-  # 
-  # if(x - y >= 10) message( cat(paste('Warning: modeled weir removal date is >10 days later \n than actual weir removal date.
-  #                              \nWeir is being removed too early \n will need to manually decrease the run_through date for reasonable results.
-  #                                    \n Recommend run_through =', z)))
-  # y
-                          
-}
+  }
 
 f_remove_dates <- function(preds, run_through){
   # removal date based upon 1% rules
@@ -314,24 +298,6 @@ f_run_caught <- function(preds, remove_dates){
     
 }
 
-f_run_caught_n <- function(preds, remove_dates){
-  
-  y = deparse(substitute(remove_dates))
-  z = ifelse(y == 'remove_dates', '1% rule', '0.05% rule')
-  
-  preds %>% 
-    left_join(remove_dates) %>% 
-    # group_by(days) %>% 
-    # mutate(max = median(max)) %>% 
-    group_by(days, year) %>% 
-    mutate(sum_fit = max(fit_cumsum)) %>%
-    filter(julian<=max) %>% 
-    summarise(diff = mean(1 - (sum(fit_run) / mean(sum_fit)))) %>% 
-    ungroup %>% 
-    mutate(days = factor(days, levels = c('one', 'two', 'three', 'four', 'five'))) %>% 
-    group_by(days) %>%
-    summarise(count = n())}
-  
 f_risk_plot <- function(preds, remove_dates){
   
   y = deparse(substitute(remove_dates))
@@ -360,7 +326,8 @@ f_risk_plot <- function(preds, remove_dates){
     ylab('% of missed run') +
     expand_limits(y = 0) +
     ggtitle(z) -> x
-  ggsave(paste0('figs/', folder,'/', y, "_risk_plot.png"), plot = x, dpi = 100, height = 8.5, width = 6.5, units = "in") 
+  ggsave(paste0('figs/', folder,'/', y, "_risk_plot.png"), plot = x, dpi = 100, 
+         height = 5, width = 6.5, units = "in") 
   
   x
 
@@ -422,8 +389,8 @@ f_median_end_date <- function(remove_dates, low = .25, high = .75){
     mutate(days = factor(days, levels = c('one', 'two', 'three', 'four', 'five'))) %>% 
     group_by(days) %>% 
     summarise(median = median(max),
-              l_25 = quantile(max, low),
-              u_75 = quantile(max, high)) %>% 
+              l_25 = round(quantile(max, low)),
+              u_75 = round(quantile(max, high))) %>% 
     mutate(date = as.Date(strptime(paste(year(Sys.Date()), median, sep='-'), "%Y-%j"))) %T>% 
     write_csv(., paste0('output/', folder,'/', y, '_median_end.csv'))
 
