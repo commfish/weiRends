@@ -140,17 +140,13 @@ f_pred_plot <- function(preds, run_through){
     group_by(year) %>%
     filter(fit_cumsum <= 0.95 * max(fit_cumsum)) %>%
     summarise(run_95 = max(julian)) -> x
-  
-=======
-f_pred_plot <- function(preds){
->>>>>>> 73f0077de453308bb6ff80dfc40684a8ec520183
+
   preds %>% 
     group_by(year) %>%
     left_join(x, .) %>% 
     mutate(julian95 = ifelse(julian == run_95, fit_cumsum, NA),
            alpha = ifelse(julian>run_95, 0.3, .8)) %>% 
     ggplot(aes(julian, fit_cumsum, color = Year, group = Year)) +
-<<<<<<< HEAD
     geom_line(aes(alpha = alpha)) +
     geom_point(aes(y = cumsum), alpha = 0.15) +
     geom_point(aes(y = julian95, fill=Year), alpha = 0.90, pch = 21) +
@@ -183,26 +179,20 @@ f_pred_plot_decade <- function(preds, run_through){
     geom_line(aes(alpha = alpha)) +
     geom_point(aes(y = cumsum ), alpha = 0.05) +
     geom_point(aes(y = julian95 , fill=Year), alpha = 0.90, pch = 21) +
-=======
     geom_line() +
     geom_point(aes(y = cumsum), alpha= 0.30) +
->>>>>>> 73f0077de453308bb6ff80dfc40684a8ec520183
     scale_y_continuous(labels = comma) +
     geom_vline(xintercept=run_through, lty = 3) +
     scale_alpha(guide = 'none') +
     scale_fill_discrete(guide = 'none') + 
     xlab('\nJulian date') +
-<<<<<<< HEAD
     ylab('Cumulative Escapement\n') +
     facet_wrap(~decade, dir = 'v') -> x
   
   ggsave(paste0('figs/', folder, "/pred_plot_decade.png"), plot = x, dpi = 100, height = 8.5, width = 6.5, units = "in") 
   
   x
-  
-=======
-    ylab('Cumulative Escapement\n')
->>>>>>> 73f0077de453308bb6ff80dfc40684a8ec520183
+
 }
 
 f_run_through <- function(data, preds){
@@ -265,41 +255,13 @@ f_remove_dates <- function(preds, run_through){
   
 } 
 
-<<<<<<< HEAD
 f_remove_dates_05 <- function(preds, run_through){
   # removal date based upon 0.05% rules
   run_through = run_through$end_date
   
   yrs = expand.grid(year = unique(preds$year),
                     days = c('one', 'two', 'three', 'four', 'five')) 
-=======
-f_preds_plot95 <- function(preds, run_through){
-  preds %>%
-    group_by(year) %>%
-    filter(fit_cumsum <= 0.95 * max(fit_cumsum)) %>%
-    summarise(run_95 = max(julian))-> x
 
-  preds %>% 
-    group_by(year) %>%
-    left_join(x, .) %>% 
-    mutate(julian95 = ifelse(julian == run_95, fit_cumsum, "")) %>%  
-    mutate(julian95= as.numeric(julian95))-> preds_95
-
-  preds_95 %>% 
-    ggplot(aes(julian, fit_cumsum, color = Year, group = Year)) +
-    geom_line() +
-    geom_point(aes(y = cumsum), alpha= 0.15, pch=16) +
-    geom_point(aes(y = julian95), alpha= 0.90, pch=8) +
-    scale_y_continuous(labels = comma) +
-    geom_vline(xintercept=run_through, lty=2) +
-    xlab('\nJulian date') +
-    ylab('Cumulative Escapement\n')
-}
-
-
-f_remove_dates <- function(preds, run_through){
->>>>>>> 73f0077de453308bb6ff80dfc40684a8ec520183
-  
   preds %>%
     dplyr::select(year, julian, fit_run, fit_cumsum) %>% 
     group_by(year) %>% 
@@ -366,10 +328,8 @@ f_run_caught_n <- function(preds, remove_dates){
     mutate(sum_fit = max(fit_cumsum)) %>%
     filter(julian<=max) %>% 
     summarise(diff = mean(1 - (sum(fit_run) / mean(sum_fit)))) %>% 
-<<<<<<< HEAD
     ungroup %>% 
     mutate(days = factor(days, levels = c('one', 'two', 'three', 'four', 'five'))) %>% 
-=======
     group_by(days) %>%
     summarise(count = n())}
   
@@ -381,7 +341,6 @@ f_risk_plot <- function(preds, remove_dates){
     mutate(sum_fit = sum(fit_run))%>% 
     filter(julian<=max) %>% 
     summarise(diff = mean(1 - (sum(fit_run) / mean(sum_fit)))) %>% 
->>>>>>> 73f0077de453308bb6ff80dfc40684a8ec520183
     group_by(days) %>% 
     summarise('99' = (100 * (quantile(diff, .99))),
               '95' = (100 * (quantile(diff, .95))),
@@ -397,16 +356,12 @@ f_risk_plot <- function(preds, remove_dates){
     geom_line() +
     xlab('% Risk') +
     ylab('% of missed run') +
-<<<<<<< HEAD
     expand_limits(y = 0) +
     ggtitle(z) -> x
   ggsave(paste0('figs/', folder,'/', y, "_risk_plot.png"), plot = x, dpi = 100, height = 8.5, width = 6.5, units = "in") 
   
   x
- 
-=======
-    expand_limits(y = 0)
->>>>>>> 73f0077de453308bb6ff80dfc40684a8ec520183
+
 }
 
 f_run_risk <- function(preds, remove_dates){
