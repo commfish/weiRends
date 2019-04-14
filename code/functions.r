@@ -132,7 +132,6 @@ f_preds <- function(data, model){
   
 }
 
-<<<<<<< HEAD
 f_pred_plot <- function(preds, run_through){
   run_through = run_through$end_date
   
@@ -335,6 +334,9 @@ f_run_caught_n <- function(preds, remove_dates){
   
 f_risk_plot <- function(preds, remove_dates){
   
+  y = deparse(substitute(remove_dates))
+  z = ifelse(y =='remove_dates', '1% rule', '0.05% rule')
+    
   preds %>% 
     left_join(remove_dates) %>% 
     group_by(days, year) %>% 
