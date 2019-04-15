@@ -98,11 +98,10 @@ f_param_plot <- function(params){
     geom_line(alpha = 0.5) +
     geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3) +
     facet_wrap(~term, scales = 'free_y') -> x
-  
-  ggsave(paste0('figs/', folder, "/param_plot.png"), x, dpi = 100, height = 5, width = 6.5, units = "in") 
-  
-  x
-  
+  print(x)
+  ggsave(paste0('figs/', folder, "/param_plot.png"), x, dpi = 100, 
+         height = 5, width = 6.5, units = "in") 
+
 }
 
 f_preds <- function(data, model){
@@ -155,10 +154,10 @@ f_pred_plot <- function(preds, run_through){
     xlab('\nJulian date') +
     ylab('Cumulative Escapement\n') -> x
   
+  print(x)
+  
   ggsave(paste0('figs/', folder, "/pred_plot.png"), plot = x, dpi = 100, 
          height = 5, width = 6.5, units = "in") 
-  
-  x
 }
 
 f_pred_plot_decade <- function(preds, run_through){
@@ -179,8 +178,6 @@ f_pred_plot_decade <- function(preds, run_through){
     geom_line(aes(alpha = alpha)) +
     geom_point(aes(y = cumsum ), alpha = 0.05) +
     geom_point(aes(y = julian95 , fill=Year), alpha = 0.90, pch = 21) +
-    geom_line() +
-    geom_point(aes(y = cumsum), alpha= 0.30) +
     scale_y_continuous(labels = comma) +
     geom_vline(xintercept=run_through, lty = 3) +
     scale_alpha(guide = 'none') +
@@ -188,12 +185,10 @@ f_pred_plot_decade <- function(preds, run_through){
     xlab('\nJulian date') +
     ylab('Cumulative Escapement\n') +
     facet_wrap(~decade, dir = 'v') -> x
+  print(x)
   
   ggsave(paste0('figs/', folder, "/pred_plot_decade.png"), plot = x, dpi = 100, 
          height = 5, width = 6.5, units = "in") 
-  
-  x
-
 }
 
 f_run_through <- function(data, preds){
@@ -289,8 +284,8 @@ f_run_caught <- function(preds, remove_dates){
               '50' = round(100 * (1 - quantile(diff, .50)))) %>% 
     gather(`% Chance`, Percent, -days) %>% 
     ungroup %>% 
-    mutate(days = factor(days, levels = c('one', 'two', 'three', 'four', 'five'))) %>% 
-    mutate(position = rep(1:7, each = length(unique(days)))) %>% 
+    mutate(days = factor(days, levels = c('one', 'two', 'three', 'four', 'five')),
+           position = rep(1:7, each = length(unique(days)))) %>% 
     spread(days, Percent) %>% 
     arrange(position) %>% 
     dplyr::select(-position) %T>% 
@@ -318,7 +313,8 @@ f_risk_plot <- function(preds, remove_dates){
               '60' = (100 * (quantile(diff, .60))),
               '50' = (100 * (quantile(diff, .50)))) %>% 
     gather(`% Chance`, Percent, -days) %>% 
-    mutate(position = rep(1:7, each = length(unique(days)))) %>% 
+    mutate(days = factor(days, levels = c('one', 'two', 'three', 'four', 'five')),
+                  position = rep(1:7, each = length(unique(days)))) %>% 
     mutate(risk = rep(c(1, 5, 10, 20, 30, 40, 50), each = 5)) %>% 
     ggplot(aes(risk, Percent, color = days)) +
     geom_line() +
@@ -326,11 +322,10 @@ f_risk_plot <- function(preds, remove_dates){
     ylab('% of missed run') +
     expand_limits(y = 0) +
     ggtitle(z) -> x
+  print(x)
   ggsave(paste0('figs/', folder,'/', y, "_risk_plot.png"), plot = x, dpi = 100, 
          height = 5, width = 6.5, units = "in") 
   
-  x
-
 }
 
 f_run_risk <- function(preds, remove_dates){
@@ -339,7 +334,7 @@ f_run_risk <- function(preds, remove_dates){
   
   # note: have to round "bins" due to 0.10 floating issue
   # see all computer programs for an example...
-  expand.grid(days = c('five', 'four', 'three', 'two'),
+  expand.grid(days = c('five', 'four', 'three', 'two', 'one'),
               bins = round(seq(0.01, 0.5, 0.01), 2)) -> x
   
   preds %>% 
@@ -350,15 +345,6 @@ f_run_risk <- function(preds, remove_dates){
     summarise(perc_missed = mean(1 - (sum(fit_run) / mean(mm)))) %>% 
       mutate(perc_missed = ifelse(perc_missed<0, 0, perc_missed)) %>% 
     group_by(days) %>% 
-    filter(perc_missed>0) -> out
-  
-  if(nrow(out)==0){
-    
-    cat(paste("Missing more than 5% of the run regularly.", 
-              'Decrease run_through date and rerun to get viable numbers.', sep="\n"))
-  } else{
-    
-    out %>% 
       summarise(perc_missed = perc_missed %>% list) %>% 
       mutate(mod = map(perc_missed, ~fitdistr(.x, 'gamma'))) %>% 
       unnest(mod %>% map(tidy)) %>% 
@@ -376,7 +362,8 @@ f_run_risk <- function(preds, remove_dates){
                               bins == 0.40 ~ '40% run missed',
                               bins == 0.50 ~ '50% run missed'),
              bins = factor(bins, levels = unique(bins)),
-             gamma = round(gamma, 3) * 100) %>% 
+             gamma = round(gamma, 3) * 100,
+             days = factor(days, levels = c('one', 'two', 'three', 'four', 'five'))) %>% 
       spread(days, gamma) %T>% 
       write_csv(., paste0('output/', folder,'/', y, '_run_risk.csv'))
   }
