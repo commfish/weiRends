@@ -35,9 +35,11 @@ There are a set of functions that need to be run in order:
 7. f_param_plot = plot parameter values 
 8. f_preds = predict the model
 9. f_pred_plot = examine predictions
-10. f_run_through = the weir should be in place through this date
-11. f_real_day = change julian date to a date people can understand
-12. f_run_caught = percent of the run that is caught at a given risk level
-13. f_risk_plot = percent of missed run at a given level of risk (the inverse of # 12)
+10. f_pred_plot = examine predictions by decade
+11. f_run_through = the weir should be in place through this date
+12. f_remove_dates = apply the 1% rule to determine when the weir would be pulled each year
+13. f_remove_dates_05 = apply the 0.05% rule to determine when the weir would be pulled each year
+14. f_run_caught = percent of the run that is caught at a given risk level
+15. f_risk_plot = percent of missed run at a given level of risk (the inverse of # 14)
 14. f_run_risk = percent of risk at a given percent of missed run
-15. f_median_end_dates = median, 25%, and 75% quantiles of weir removal dates (julian) for 1% rules
+15. f_median_end_date = median, 25%, and 75% quantiles of weir removal dates (julian) for 1% or 0.05% rules
