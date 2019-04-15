@@ -1,7 +1,7 @@
-bins,five,four,one,three,two
-1% run missed,41.099999999999994,48.4,80.60000000000001,54.6,66.7
-5% run missed,1.9,3,6.3,3.8,4.8
-10% run missed,0,0.1,0.1,0.1,0.1
+bins,one,two,three,four,five
+1% run missed,80.60000000000001,66.7,54.6,45.7,39.2
+5% run missed,6.3,4.8,3.8,3.5000000000000004,2.1999999999999997
+10% run missed,0.1,0.1,0.1,0.2,0.1
 20% run missed,0,0,0,0,0
 30% run missed,0,0,0,0,0
 40% run missed,0,0,0,0,0
