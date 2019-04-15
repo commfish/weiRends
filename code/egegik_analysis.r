@@ -15,6 +15,9 @@
 source('code/helper.r')
 source('code/functions.r')
 
+# globals ----
+folder <- 'egegik'
+
 # data ----
 # data inputs are date (mm/dd/yyyy) and weir count
 
