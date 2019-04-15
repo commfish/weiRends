@@ -343,7 +343,7 @@ f_run_risk <- function(preds, remove_dates){
     mutate(mm = max(fit_cumsum)) %>% 
     filter(julian <= max) %>% 
     summarise(perc_missed = mean(1 - (sum(fit_run) / mean(mm)))) %>% 
-      mutate(perc_missed = ifelse(perc_missed<0, 0, perc_missed)) %>% 
+      mutate(perc_missed = ifelse(perc_missed<=0, 0.00001, perc_missed)) %>% 
     group_by(days) %>% 
       summarise(perc_missed = perc_missed %>% list) %>% 
       mutate(mod = map(perc_missed, ~fitdistr(.x, 'gamma'))) %>% 
@@ -366,8 +366,8 @@ f_run_risk <- function(preds, remove_dates){
              days = factor(days, levels = c('one', 'two', 'three', 'four', 'five'))) %>% 
       spread(days, gamma) %T>% 
       write_csv(., paste0('output/', folder,'/', y, '_run_risk.csv'))
-  }
 }
+
 
 f_median_end_date <- function(remove_dates, low = .25, high = .75){
   y = deparse(substitute(remove_dates))
