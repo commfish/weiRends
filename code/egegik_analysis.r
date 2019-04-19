@@ -21,7 +21,7 @@ folder <- 'egegik'
 # data ----
 # data inputs are date (mm/dd/yyyy) and weir count
 
-read_csv('egegik/data/egegik.csv') -> egegik
+read_csv('data/egegik.csv') -> egegik
 
 # run functions ----
 
