@@ -110,7 +110,7 @@ knitr::include_graphics(here("figs/egegik/pred_plot.png"))
 knitr::include_graphics(here("figs/egegik/pred_plot_decade.png"))
 ```
 
-Based upon median removal dates presented in Table \@ref(tab:remove-eg) there is a 95% chance of capturing 94-96% of the total run, depending on which weir removal rule (# of days) is implemented (Table \@ref(tab:chance-eg)).
+Based upon median removal dates presented in Table \@ref(tab:remove-eg), there is a 95% chance of capturing 94-96% of the total run, depending on which weir removal rule (# of days) is implemented (Table \@ref(tab:chance-eg)).
 
 ```{r remove-eg, results = 'asis'}
 tbls_egegik$remove_dates_median_end %>% 
@@ -140,16 +140,16 @@ tbls_egegik$remove_dates_run_risk %>%
 # Chilkoot River
 
 The logistic model provided an overall better fit to the data than the Gompertz model. 
-None of the parameter estiminates have substantial error bars (Figure \@ref(fig:param-koot)) and the models converged for all years.
+None of the parameter estimates have substantial error bars (Figure \@ref(fig:param-koot)) and the models converged for all years.
 The predicted data show a reasonable model fit for most years (Figures  \@ref(fig:pred-koot) & \@ref(fig:pred-decade-koot)). 
-Based upon all years data the 95% mean passage weir removal date is `r tbls_koot$run_through$date`. 
+Based upon all years data, the 95% mean passage weir removal date is `r tbls_koot$run_through$date`. 
 This is the date that the weir must be operated through, i.e., removal could occur on the following day.
 
 ```{r param-koot, fig.cap="Parameter estimates from the logistic model for the Chilkoot River."}
 knitr::include_graphics(here("figs/chilkoot/param_plot.png"))
 ```
 
-```{r pred-koot, fig.cap="Predicted cumulative escapements by year for the Chilkoot River. Filled circles indicate 95\\% of the run has passed the weir. The vertical line is the mean date that 95\\% of the run has passed the weir."}
+```{r pred-koot, fig.cap="Predicted cumulative escapements by year and decade for the Chilkoot River. Filled circles indicate 95\\% of the run has passed the weir. The vertical line is the mean date that 95\\% of the run has passed the weir."}
 knitr::include_graphics(here("figs/chilkoot/pred_plot.png"))
 ```
 
@@ -157,7 +157,7 @@ knitr::include_graphics(here("figs/chilkoot/pred_plot.png"))
 knitr::include_graphics(here("figs/chilkoot/pred_plot_decade.png"))
 ```
 
-Based upon median removal dates presented in Table \@ref(tab:remove-koot) there is a 95% chance of capturing 83-85% of the total run, depending on which weir removal rule (# of days) is implemented (Table \@ref(tab:chance-koot)).
+Based upon median removal dates presented in Table \@ref(tab:remove-koot), there is a 95% chance of capturing 83-85% of the total run, depending on which weir removal rule (# of days) is implemented (Table \@ref(tab:chance-koot)).
 Note that there is a 50% chance of capturing 95% of the run, e.g., the average 95% mean passage date stated previously.
 
 ```{r remove-koot, results = 'asis'}
@@ -180,7 +180,7 @@ knitr::include_graphics(here("figs/chilkoot/remove_dates_risk_plot.png"))
 ```
 
 The percent of the run that would be missed is further examined in Table \@ref(tab:risk2-koot). 
-Overall, this run is not well represented by the 1% rule as the would not extend the median removal date. 
+Overall, this run is not well represented by the 1% rule as the rule would not extend the median removal date. 
 The reason for this is that the run past the 95% removal rate occurs in daily numbers that are less than 1% of the cumulative run for those days. Therefore, an additional weir removal rule of 0.05% passage was explored.
 
 ```{r risk2-koot, results = 'asis'}
