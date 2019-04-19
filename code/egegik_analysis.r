@@ -72,7 +72,7 @@ f_remove_dates(preds, run_through) -> remove_dates
 f_remove_dates_05(preds, run_through) -> remove_dates_05 
 
 # Percent of the run that is caught at a given risk level
-f_run_caught(preds, remove_dates)
+f_run_caught(preds, remove_dates) 
 f_run_caught(preds, remove_dates_05)
 
 # plot of missed run and risk
