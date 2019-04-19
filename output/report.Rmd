@@ -88,7 +88,7 @@ The date that a weir should remain in place to capture 95% of the escapement on 
 
 # Egegik River
 
-As the original workup was for the Egegik River this analysis was repeated to reflect changes between the current code and the provided spreadsheet.
+As the original workup was for the Egegik River, this analysis was repeated to reflect changes between the current code and the provided spreadsheet.
 
 ## Model fits
 The Gompertz and logistic models fit similarly, although the logistic model peformed slightly better (lower overall deviance) and was selected for the remaining analyses (Figure  \@ref(fig:param)). 
@@ -98,8 +98,8 @@ Note that the provided spreadsheet used the Gompertz model.
 knitr::include_graphics(here("figs/egegik/param_plot.png"))
 ```
 
-The predicted data show a reasonable model fit for most years (Figure  \@ref(fig:pred)). 
-Based upon all years data, the 95% mean passage weir removal date is `r tbls_egegik$run_through$date`. 
+The predicted data showed a reasonable model fit for most years (Figure  \@ref(fig:pred)). 
+Based upon all years of data, the 95% mean passage weir removal date is `r tbls_egegik$run_through$date`. 
 This is the date that the weir must be operated through, i.e., removal could occur on the following day.
 
 ```{r pred, fig.cap="Predicted cumulative escapements by year for the Egegik River. Filled circles indicate 95\\% of the run has passed the weir. The vertical line is the mean date when 95\\% of the run has passed the weir."}
