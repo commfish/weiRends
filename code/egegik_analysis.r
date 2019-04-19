@@ -30,7 +30,7 @@ f_clean_data(egegik) -> df
 
 # model
 f_gomp_model(df) -> model
-saveRDS(model_logistic, paste0('output/', folder, '/model.rda'))
+saveRDS(model, paste0('output/', folder, '/model.rda'))
 
 # model logistic function
 f_logistic_model(df) -> model_logistic
