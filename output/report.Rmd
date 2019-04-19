@@ -260,7 +260,7 @@ knitr::include_graphics(here("figs/situk/remove_dates_risk_plot.png"))
 ```
 
 The percent of the run that would be missed is further examined in Table \@ref(tab:risk2-situk). 
-Overall, this run is not well represented by the 1% rule as the would not extend the median removal date. 
+Overall, this run is not well represented by the 1% rule and would not extend the median removal date. 
 The reason for this is that the run past the 95% removal rate occurs in daily numbers that are less than 1% of the cumulative run for those days. Therefore, an additional weir removal rule of 0.05% passage was explored.
 
 ```{r risk2-situk, results = 'asis'}
@@ -270,8 +270,8 @@ tbls_situk$remove_dates_run_risk %>%
 
 ## 0.05\% Rule
 
-Using a 0.05% rule proved to adjust the median removal date (Table \@ref(tab:remove05-situk)) and substantially improve the chance that the majority of the run was observed (Table \@ref(tab:chance05-situk)).
-The 0.05% rule decreases the percent risk (Figure \@ref(fig:risk05-situk)).
+Using a 0.05% rule proved to adjust the median removal date (Table \@ref(tab:remove05-situk)) substantially improved the chance that the majority of the run was observed (Table \@ref(tab:chance05-situk)).
+The 0.05% rule decreased the percent risk (Figure \@ref(fig:risk05-situk)).
 
 ```{r remove05-situk, results = 'asis'}
 tbls_situk$remove_dates_05_median_end %>% 
@@ -283,7 +283,7 @@ tbls_situk$remove_dates_05_run_caught %>%
    knitr::kable(format = 'pandoc', caption = 'The percent of the run that is caught at a given risk level (% Chance) based upon the number of days the 0.05% rule is implemented for the Situk River.')
 ```
 
-```{r risk05-situk, fig.cap="The percent of risk that a given \\% of the run is missed, e.g., 5\\% of the run will be missed 7\\% of the time using a five day 0.05\\% rule for the Chilsituk River."}
+```{r risk05-situk, fig.cap="The percent of risk that a given \\% of the run is missed, e.g., 5\\% of the run will be missed 7\\% of the time using a five day 0.05\\% rule for the Situk River."}
 knitr::include_graphics(here("figs/situk/remove_dates_05_risk_plot.png"))
 ```
 
