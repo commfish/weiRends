@@ -131,6 +131,19 @@ f_preds <- function(data, model){
   
 }
 
+f_run_through <- function(data, preds){
+  
+  # modeled date to 95% of run
+  preds %>%
+    group_by(year) %>%
+    filter(fit_cumsum <= 0.95 * max(fit_cumsum)) %>%
+    summarise(run_95 = max(julian)) %>%
+    ungroup %>%
+    summarise(end_date = round(mean(run_95))) %>% 
+    mutate(date = as.Date(strptime(paste(year(Sys.Date()), end_date, sep='-'), "%Y-%j"))) %T>% 
+    write_csv(., paste0('output/', folder, '/run_through.csv'))
+}
+
 f_pred_plot <- function(preds, run_through){
   run_through = run_through$end_date
   
@@ -191,18 +204,7 @@ f_pred_plot_decade <- function(preds, run_through){
          height = 5, width = 6.5, units = "in") 
 }
 
-f_run_through <- function(data, preds){
-  
-  # modeled date to 95% of run
-  preds %>%
-    group_by(year) %>%
-    filter(fit_cumsum <= 0.95 * max(fit_cumsum)) %>%
-    summarise(run_95 = max(julian)) %>%
-    ungroup %>%
-    summarise(end_date = round(mean(run_95))) %>% 
-    mutate(date = as.Date(strptime(paste(year(Sys.Date()), end_date, sep='-'), "%Y-%j"))) %T>% 
-    write_csv(., paste0('output/', folder, '/run_through.csv'))
-  }
+
 
 f_remove_dates <- function(preds, run_through){
   # removal date based upon 1% rules
