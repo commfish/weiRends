@@ -66,7 +66,7 @@ f_pred_plot(preds, run_through)
 # plot the predicted data
 f_pred_plot_decade(preds, run_through)
 
-# dates the weirs would be removed based upon 1% rule
+# dates the weirs would be removed based upon 1% and 0.05% rule
 # for 5,4,3, or 2 days
 f_remove_dates(preds, run_through) -> remove_dates 
 f_remove_dates_05(preds, run_through) -> remove_dates_05 
