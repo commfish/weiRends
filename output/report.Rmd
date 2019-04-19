@@ -190,8 +190,8 @@ tbls_koot$remove_dates_run_risk %>%
 
 ## 0.05% Rule
 
-Using a 0.05% rule proved to adjust the median removal date (Table \@ref(tab:remove05-koot)) and substantially improve the chance that the majority of the run was observed (Table \@ref(tab:chance05-koot)).
-The 0.05% rule decreases the percent risk (Figure \@ref(fig:risk05-koot)).
+Using a 0.05% rule proved to adjust the median removal date (Table \@ref(tab:remove05-koot)) and substantially improved the chance that the majority of the run was observed (Table \@ref(tab:chance05-koot)).
+The 0.05% rule decreased the percent risk (Figure \@ref(fig:risk05-koot)).
 
 ```{r remove05-koot, results = 'asis'}
 tbls_koot$remove_dates_05_median_end %>% 
