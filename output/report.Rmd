@@ -48,11 +48,11 @@ Steve Heinl
 # Background
 The objectives of this analysis were to:  
 
-  1.  Model the tails of the run to quantify a hard ending date for weir operations – the date to which the weir would be required to be operated (e.g., would capture 95% of the escapement on average);
+  1.  Model the tails of the run to quantify a hard ending date for weir operations – the date to which the weir would be required to be operated (e.g., would capture 95% of the escapement on average).
   
   2. Estimate % of counts missed if the project was operated past the hard ending date until daily counts equaled less than 1% of cumulative count for 3, 4, or 5 days in a row.
   
-  3. Analyze the Situk River and Chilkoot Lake sockeye salmon weir data to determine the hard ending date the weirs should required be operated through to capture 95% of the run on average; estimate the percent of missed counts if the project was operated past the hard ending date until daily counts equaled less than 1% of cumulative count for 3, 4, or 5 days in a row. 
+  3. Analyze the Situk River and Chilkoot Lake sockeye salmon weir data to determine the hard ending date the weirs should be operated through to capture 95% of the run on average; estimate the percent of missed counts if the project was operated past the hard ending date until daily counts equaled less than 1% of cumulative count for 3, 4, or 5 days in a row. 
   
 All associated files, data, and code are located at https://github.com/commfish/weiRends.
 
@@ -66,7 +66,7 @@ date       count
 
 This is for a single species at a single weir. 
 No other values or comments should be included in the file. 
-Data should preferably be provided in .csv format. 
+Data should be provided in .csv format. 
 
 ##Analysis
 Two models were considered: 
@@ -77,21 +77,21 @@ and the logistic model
 $$\frac{p}{\mathrm{1+e}^{-k(t-t_0)}}.$$ 
 The variable *p* represents the asymptote of the cumulative escapement, *k* is the steepness of the curve, and *t*~0~ is the inflection point of the curve. 
 
-The evaluation process starts by fitting both models, the model with the least total variance is chosen for the analysis. 
-A cumulative run is predicted from the selected model, this is converted into the number of estimated fish past the weir for a given day.
+The evaluation process starts by fitting both models, and then the model with the least total variance is chosen for the analysis. 
+A cumulative run is predicted from the selected model and then this is converted into the number of estimated fish past the weir for a given day.
 A reconstructed run is estimated using observed daily data, filling in any data gaps with estimated daily escapement numbers. 
 This reconstructed run is then used to compute a cumulative sum of escapement. 
-The date that a weir should remain in place to capture 95% of the escapement on average in calculated using the reconstructed cumulative sum.
+The date that a weir should remain in place to capture 95% of the escapement on average is calculated using the reconstructed cumulative sum.
 
 
 
 
 # Egegik analysis
 
-As the original workup was for the Egegik River this analysis was repeated here to reflect changes between the current code and the provided spreadsheet.
+As the original workup was for the Egegik River this analysis was repeated to reflect changes between the current code and the provided spreadsheet.
 
 ## Model fits
-The Gompertz and logistic models fit similarly, though the logistic model peformed slightly better (lower overall deviance) and was selected for the remaining analyses.  (Figure  \@ref(fig:param)). 
+The Gompertz and logistic models fit similarly, though the logistic model peformed slightly better (lower overall deviance) and was selected for the remaining analyses (Figure  \@ref(fig:param)). 
 Note that the provided spreadsheet used the Gompertz model.
 
 ```{r param, fig.cap="Parameter estimates from the logistic model for the Egegik River."}
@@ -99,10 +99,10 @@ knitr::include_graphics(here("figs/egegik/param_plot.png"))
 ```
 
 The predicted data show a reasonable model fit for most years (Figure  \@ref(fig:pred)). 
-Based upon all years data the 95% mean passage weir removal date is `r tbls_egegik$run_through$date`. 
+Based upon all years data, the 95% mean passage weir removal date is `r tbls_egegik$run_through$date`. 
 This is the date that the weir must be operated through, i.e., removal could occur on the following day.
 
-```{r pred, fig.cap="Predicted cumulative escapements by year for the Egegik River. Filled circles indicate 95\\% of the run has passed the weir. The vertical line is the mean date that 95\\% of the run has passed the weir."}
+```{r pred, fig.cap="Predicted cumulative escapements by year and decade for the Egegik River. Filled circles indicate 95\\% of the run has passed the weir. The vertical line is the mean date that 95\\% of the run has passed the weir."}
 knitr::include_graphics(here("figs/egegik/pred_plot.png"))
 ```
 
