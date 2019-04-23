@@ -102,7 +102,7 @@ The predicted data showed a reasonable model fit for most years (Figure  \@ref(f
 Based upon all years of data, the 95% mean passage weir removal date is `r tbls_egegik$run_through$date`. 
 This is the date that the weir must be operated through, i.e., removal could occur on the following day.
 
-```{r pred, fig.cap="Predicted cumulative escapements by year for the Egegik River. Filled circles indicate 95\\% of the run has passed the weir. The vertical line is the mean date when 95\\% of the run has passed the weir."}
+```{r pred, fig.cap="Predicted cumulative escapements by year for the Egegik River. Filled circles indicate 95\\% of the run has passed the weir. The vertical line is the mean date when 95\\% of the run has passed the weir. The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
 knitr::include_graphics(here("figs/egegik/pred_plot.png"))
 ```
 
@@ -149,7 +149,7 @@ This is the date that the weir must be operated through, i.e., removal could occ
 knitr::include_graphics(here("figs/chilkoot/param_plot.png"))
 ```
 
-```{r pred-koot, fig.cap="Predicted cumulative escapements by year for the Chilkoot River. Filled circles indicate 95\\% of the run has passed the weir. The vertical line is the mean date when 95\\% of the run has passed the weir."}
+```{r pred-koot, fig.cap="Predicted cumulative escapements by year for the Chilkoot River. Filled circles indicate 95\\% of the run has passed the weir. The vertical line is the mean date when 95\\% of the run has passed the weir.The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
 knitr::include_graphics(here("figs/chilkoot/pred_plot.png"))
 ```
 
@@ -229,7 +229,7 @@ This is the date that the weir must be operated through, i.e., removal could occ
 knitr::include_graphics(here("figs/situk/param_plot.png"))
 ```
 
-```{r pred-situk, fig.cap="Predicted cumulative escapements by year for the Situk River. Filled circles indicate 95\\% of the run has passed the weir. The vertical line is the mean date when 95\\% of the run has passed the weir."}
+```{r pred-situk, fig.cap="Predicted cumulative escapements by year for the Situk River. Filled circles indicate 95\\% of the run has passed the weir. The vertical line is the mean date when 95\\% of the run has passed the weir.The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
 knitr::include_graphics(here("figs/situk/pred_plot.png"))
 ```
 
