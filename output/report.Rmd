@@ -158,7 +158,7 @@ knitr::include_graphics(here("figs/chilkoot/pred_plot_decade.png"))
 ```
 
 Based upon median removal dates presented in Table \@ref(tab:remove-koot), there is a 95% chance of capturing 83-85% of the total run, depending on which weir removal rule (# of days) is implemented (Table \@ref(tab:chance-koot)).
-Note that there is a 50% chance of capturing 94-94% of the run, which is slightly lower than the expected 95% based upon the mean passage date stated previously.
+Note that there is a 50% chance of capturing 95-96% of the run, which is slightly lower than the expected 95% based upon the mean passage date stated previously.
 
 ```{r remove-koot, results = 'asis'}
 tbls_koot$remove_dates_median_end %>% 
