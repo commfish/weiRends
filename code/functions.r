@@ -93,6 +93,7 @@ f_params <- function(model){
 f_param_plot <- function(params){
   
   params %>% 
+    mutate(term = ifelse(term=='pop', 'p', term)) %>% 
     ggplot(aes(year, estimate)) +
     geom_point(alpha = .2) +
     geom_line(alpha = 0.5) +
