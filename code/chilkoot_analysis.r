@@ -31,12 +31,14 @@ read_csv('data/chilkoot_weir_1976-2018.csv') %>%
 f_clean_data(chilkoot) -> df
 
 # model
-f_gomp_model(df) -> model
-saveRDS(model, paste0('output/', folder, '/model.rda'))
+# f_gomp_model(df) -> model
+# saveRDS(model, paste0('output/', folder, '/model.rda'))
+readRDS(paste0('output/', folder, '/model.rda')) -> model
 
 # model logistic function
-f_logistic_model(df) -> model_logistic
-saveRDS(model_logistic, paste0('output/', folder, '/logistic_model.rda'))
+# f_logistic_model(df) -> model_logistic
+# saveRDS(model_logistic, paste0('output/', folder, '/logistic_model.rda'))
+readRDS(paste0('output/', folder, '/logistic_model.rda')) -> model_logistic
 
 # check model fits - did all models converge?
 # if not may need to go into f_gomp_model and change the lower 
@@ -60,7 +62,7 @@ f_preds(df, model_logistic) -> preds
 
 # what is the minimum day that the weir should be in place?
 # the Julian date that 95% of the modeled run has been observed - on average
-f_run_through(df, preds) -> run_through
+f_run_through(preds) -> run_through
 
 # plot the predicted data
 f_pred_plot(preds, run_through)

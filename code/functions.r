@@ -17,7 +17,7 @@ f_clean_data <- function(data){
 
 f_gomp_model <- function(data){
   
-  df %>% 
+  data %>% 
     group_by(year) %>% 
     summarise(lim = max(cumsum, na.rm = T)) %>% 
     ungroup() %>% 
@@ -132,9 +132,9 @@ f_preds <- function(data, model){
   
 }
 
-f_run_through <- function(data, preds){
+# f_run_through <- function(preds){
   
-  # modeled date to 95% of run
+ # modeled date to 95% of run
   preds %>%
     group_by(year) %>%
     filter(fit_cumsum <= 0.95 * max(fit_cumsum)) %>%
@@ -143,6 +143,17 @@ f_run_through <- function(data, preds){
     summarise(end_date = round(mean(run_95))) %>% 
     mutate(date = as.Date(strptime(paste(year(Sys.Date()), end_date, sep='-'), "%Y-%j"))) %T>% 
     write_csv(., paste0('output/', folder, '/run_through.csv'))
+}
+
+f_run_through <- function(preds, perc = .90, prob = 0.95){
+  
+  preds %>% 
+    group_by(year) %>%
+    filter(fit_cumsum <= perc * max(fit_cumsum)) %>%
+    summarise(run_95 = max(julian)) %>% 
+    ungroup %>%
+    summarise(end_date = round(quantile(run_95, prob+(1-prob)/2))) %>% 
+    mutate(date = as.Date(strptime(paste(year(Sys.Date()), end_date, sep='-'), "%Y-%j")))
 }
 
 f_pred_plot <- function(preds, run_through){
