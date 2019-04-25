@@ -71,20 +71,16 @@ f_pred_plot_decade(preds, run_through)
 # dates the weirs would be removed based upon 1% and 0.05% rule
 # for 5,4,3, or 2 days
 f_remove_dates(preds, run_through) -> remove_dates 
-f_remove_dates_05(preds, run_through) -> remove_dates_05 
 
 # Percent of the run that is caught at a given risk level
 f_run_caught(preds, remove_dates) 
-f_run_caught(preds, remove_dates_05)
 
 # plot of missed run and risk
 f_risk_plot(preds, remove_dates)
-f_risk_plot(preds, remove_dates_05)
 
 # Percent of risk at a given % of missed run
 f_run_risk(preds, remove_dates)
-f_run_risk(preds, remove_dates_05)
 
 # Median, 25% and 75% quantiles of weir end date
 f_median_end_date(remove_dates)
-f_median_end_date(remove_dates_05)
+

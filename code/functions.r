@@ -135,33 +135,34 @@ f_preds <- function(data, model){
 # f_run_through <- function(preds){
   
  # modeled date to 95% of run
-  preds %>%
-    group_by(year) %>%
-    filter(fit_cumsum <= 0.95 * max(fit_cumsum)) %>%
-    summarise(run_95 = max(julian)) %>%
-    ungroup %>%
-    summarise(end_date = round(mean(run_95))) %>% 
-    mutate(date = as.Date(strptime(paste(year(Sys.Date()), end_date, sep='-'), "%Y-%j"))) %T>% 
-    write_csv(., paste0('output/', folder, '/run_through.csv'))
-}
+#   preds %>%
+#     group_by(year) %>%
+#     filter(fit_cumsum <= 0.95 * max(fit_cumsum)) %>%
+#     summarise(run_95 = max(julian)) %>%
+#     ungroup %>%
+#     summarise(end_date = round(mean(run_95))) %>% 
+#     mutate(date = as.Date(strptime(paste(year(Sys.Date()), end_date, sep='-'), "%Y-%j"))) %T>% 
+#     write_csv(., paste0('output/', folder, '/run_through.csv'))
+# }
 
-f_run_through <- function(preds, perc = .90, prob = 0.95){
+f_run_through <- function(preds, perc = 0.90, prob = 0.95){
   
   preds %>% 
     group_by(year) %>%
     filter(fit_cumsum <= perc * max(fit_cumsum)) %>%
     summarise(run_95 = max(julian)) %>% 
     ungroup %>%
-    summarise(end_date = round(quantile(run_95, prob+(1-prob)/2))) %>% 
-    mutate(date = as.Date(strptime(paste(year(Sys.Date()), end_date, sep='-'), "%Y-%j")))
+    summarise(end_date = quantile(run_95, prob)) %>% 
+    mutate(date = as.Date(strptime(paste(year(Sys.Date()), end_date, sep='-'), "%Y-%j"))) %T>%     write_csv(., paste0('output/', folder, '/run_through.csv'))
+  
 }
 
-f_pred_plot <- function(preds, run_through){
+f_pred_plot <- function(preds, run_through, perc = 0.90){
   run_through = run_through$end_date
   
   preds %>%
     group_by(year) %>%
-    filter(fit_cumsum <= 0.95 * max(fit_cumsum)) %>%
+    filter(fit_cumsum <= perc * max(fit_cumsum)) %>%
     summarise(run_95 = max(julian)) -> x
 
   preds %>% 
@@ -179,18 +180,18 @@ f_pred_plot <- function(preds, run_through){
     xlab('\nJulian date') +
     ylab('Cumulative Escapement\n') -> x
   
-  print(x)
-  
   ggsave(paste0('figs/', folder, "/pred_plot.png"), plot = x, dpi = 100, 
          height = 5, width = 6.5, units = "in") 
+  
+  x
 }
 
-f_pred_plot_decade <- function(preds, run_through){
+f_pred_plot_decade <- function(preds, run_through, perc = 0.90){
   run_through = run_through$end_date
   
   preds %>%
     group_by(year) %>%
-    filter(fit_cumsum <= 0.95 * max(fit_cumsum)) %>%
+    filter(fit_cumsum <= perc * max(fit_cumsum)) %>%
     summarise(run_95 = max(julian)) -> x
 
   preds %>% 
@@ -215,8 +216,6 @@ f_pred_plot_decade <- function(preds, run_through){
   ggsave(paste0('figs/', folder, "/pred_plot_decade.png"), plot = x, dpi = 100, 
          height = 5, width = 6.5, units = "in") 
 }
-
-
 
 f_remove_dates <- function(preds, run_through){
   # removal date based upon 1% rules
@@ -289,13 +288,13 @@ f_run_caught <- function(preds, remove_dates){
     group_by(days, year) %>% 
     summarise(diff = (1 - (sum(fit_run) / mean(max_cumsum)))) %>% 
     group_by(days) %>% 
-    summarise('99' = round(100 * (1 - quantile(diff, .99))),
-              '95' = round(100 * (1 - quantile(diff, .95))),
-              '90' = round(100 * (1 - quantile(diff, .90))),
-              '80' = round(100 * (1 - quantile(diff, .80))),
-              '70' = round(100 * (1 - quantile(diff, .70))),
-              '60' = round(100 * (1 - quantile(diff, .60))),
-              '50' = round(100 * (1 - quantile(diff, .50)))) %>% 
+    summarise('99' = round(100 * (1 - quantile(diff, .99)), 1),
+              '95' = round(100 * (1 - quantile(diff, .95)), 1),
+              '90' = round(100 * (1 - quantile(diff, .90)), 1),
+              '80' = round(100 * (1 - quantile(diff, .80)), 1),
+              '70' = round(100 * (1 - quantile(diff, .70)), 1),
+              '60' = round(100 * (1 - quantile(diff, .60)), 1),
+              '50' = round(100 * (1 - quantile(diff, .50)), 1)) %>% 
     gather(`% Chance`, Percent, -days) %>% 
     ungroup %>% 
     mutate(days = factor(days, levels = c('one', 'two', 'three', 'four', 'five')),
@@ -315,17 +314,17 @@ f_risk_plot <- function(preds, remove_dates){
   preds %>% 
     left_join(remove_dates) %>% 
     group_by(days, year) %>% 
-    mutate(sum_fit = sum(fit_run))%>% 
+    mutate(sum_fit = sum(fit_run)) %>% 
     filter(julian<=max) %>% 
     summarise(diff = mean(1 - (sum(fit_run) / mean(sum_fit)))) %>% 
     group_by(days) %>% 
-    summarise('99' = (100 * (quantile(diff, .99))),
-              '95' = (100 * (quantile(diff, .95))),
-              '90' = (100 * (quantile(diff, .90))),
-              '80' = (100 * (quantile(diff, .80))),
-              '70' = (100 * (quantile(diff, .70))),
-              '60' = (100 * (quantile(diff, .60))),
-              '50' = (100 * (quantile(diff, .50)))) %>% 
+    summarise('99' = round(100 * (quantile(diff, .99)), 1),
+              '95' = round(100 * (quantile(diff, .95)), 1),
+              '90' = round(100 * (quantile(diff, .90)), 1),
+              '80' = round(100 * (quantile(diff, .80)), 1),
+              '70' = round(100 * (quantile(diff, .70)), 1),
+              '60' = round(100 * (quantile(diff, .60)), 1),
+              '50' = round(100 * (quantile(diff, .50)), 1)) %>% 
     gather(`% Chance`, Percent, -days) %>% 
     mutate(days = factor(days, levels = c('one', 'two', 'three', 'four', 'five')),
                   position = rep(1:7, each = length(unique(days)))) %>% 
