@@ -153,7 +153,8 @@ f_run_through <- function(preds, perc = 0.90, prob = 0.95){
     summarise(run_95 = max(julian)) %>% 
     ungroup %>%
     summarise(end_date = quantile(run_95, prob)) %>% 
-    mutate(date = as.Date(strptime(paste(year(Sys.Date()), end_date, sep='-'), "%Y-%j"))) %T>%     write_csv(., paste0('output/', folder, '/run_through.csv'))
+    mutate(date = as.Date(strptime(paste(year(Sys.Date()), end_date, sep='-'), "%Y-%j"))) %T>% 
+    write_csv(., paste0('output/', folder, '/run_through.csv'))
   
 }
 
