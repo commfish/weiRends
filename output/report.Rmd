@@ -48,13 +48,13 @@ Steve Heinl
 # Background
 The objectives of this analysis were to:  
 
-  1.  Model the tails of the run to quantify a hard ending date for weir operations – the date to which the weir would be required to be operated (e.g., would capture 95% of the escapement on average).
+  1.  Model the tails of the run to quantify a hard ending date for weir operations – the date to which the weir would be required to be operated (e.g., would capture 90% of the escapement 95% of the time on average).
   
   2. Estimate the % of counts missed if the project was operated past the hard ending date until daily counts equaled less than 1% of the cumulative count for 3, 4, or 5 days in a row.
   
   3. Analyze the Situk River and Chilkoot Lake sockeye salmon weir data to determine the hard ending date the weirs should be operated through to capture 95% of the run on average. Estimate the percent of missed counts if the project was operated past the hard ending date until daily counts equaled less than 1% of the cumulative count for 3, 4, or 5 days in a row. 
   
-All associated files, data, and code are located at https://github.com/commfish/weiRends.
+All associated files, data, and code are located at https://github.com/commfish/weiRends. This work was originally developed by Scott Raborn. 
 
 ## Data
 
@@ -78,12 +78,11 @@ $$\frac{p}{\mathrm{1+e}^{-k(t-t_0)}}.$$
 The variable *p* represents the asymptote of the cumulative escapement, *k* is the steepness of the curve, and *t*~0~ is the inflection point of the curve. 
 
 The evaluation process starts by fitting both models, and then the model with the least total variance is chosen for the analysis. 
+*Note that this is a coarse approach and is not a meaningful model comparison*.
 Cumulative run is predicted from the selected model and then this is converted into the number of estimated fish past the weir for a given day.
 A reconstructed run is estimated using observed daily data, filling in any data gaps with estimated daily escapement numbers. 
 This reconstructed run is then used to compute a cumulative sum of escapement. 
 The date that a weir should remain in place to capture 95% of the escapement on average is calculated using the reconstructed cumulative sum.
-
-
 
 
 # Egegik River
@@ -99,7 +98,7 @@ knitr::include_graphics(here("figs/egegik/param_plot.png"))
 ```
 
 The predicted data showed a reasonable model fit for most years (Figure  \@ref(fig:pred)). 
-Based upon all years of data, the 95% mean passage weir removal date is `r tbls_egegik$run_through$date`. 
+Based upon all years of data, the date that 90% of the escampent passes the weir 95% of the time is `r tbls_egegik$run_through$date`. 
 This is the date that the weir must be operated through, i.e., removal could occur on the following day.
 
 ```{r pred, fig.cap="Predicted cumulative escapements by year for the Egegik River. Filled circles indicate 95\\% of the run has passed the weir. The vertical line is the mean date when 95\\% of the run has passed the weir. The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
@@ -229,11 +228,11 @@ This is the date that the weir must be operated through, i.e., removal could occ
 knitr::include_graphics(here("figs/situk/param_plot.png"))
 ```
 
-```{r pred-situk, fig.cap="Predicted cumulative escapements by year for the Situk River. Filled circles indicate 95\\% of the run has passed the weir. The vertical line is the mean date when 95\\% of the run has passed the weir.The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
+```{r pred-situk, fig.cap="Predicted cumulative escapements by year for the Situk River. Filled circles indicate 90\\% of the run has passed the weir. The vertical line is the date where 90\\% of escapement has occurred 95\\% of the time. The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
 knitr::include_graphics(here("figs/situk/pred_plot.png"))
 ```
 
-```{r pred-decade-situk, fig.cap="Predicted cumulative escapements by year and decade for the Situk River. Filled circles indicate 95\\% of the run has passed the weir. The vertical line is the mean date when 95\\% of the run has passed the weir."}
+```{r pred-decade-situk, fig.cap="Predicted cumulative escapements by year and decade for the Situk River. Filled circles indicate 90\\% of the run has passed the weir. The vertical line is the date where 90\\% of escapement has occurred 95\\% of the time. The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
 knitr::include_graphics(here("figs/situk/pred_plot_decade.png"))
 ```
 
