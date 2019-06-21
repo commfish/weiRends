@@ -54,7 +54,7 @@ The objectives of this analysis were to:
   
   3. Analyze the Situk River and Chilkoot Lake sockeye salmon weir data to determine the hard ending date the weirs should be operated through to capture 95% of the run on average. Estimate the percent of missed counts if the project was operated past the hard ending date until daily counts equaled less than 1% of the cumulative count for 3, 4, or 5 days in a row. 
   
-All associated files, data, and code are located at https://github.com/commfish/weiRends. This work was originally developed by Scott Raborn. 
+All associated files, data, and code are located at https://github.com/commfish/weiRends. This work is based upon efforts originally developed by Scott Raborn. 
 
 ## Data
 
@@ -68,7 +68,7 @@ This is for a single species at a single weir.
 No other values or comments should be included in the file. 
 Data should be provided in .csv format. 
 
-##Analysis
+## Analysis
 Two models were considered: 
 
 The Gompertz model 
@@ -87,7 +87,7 @@ The date that a weir should remain in place to capture 95% of the escapement on 
 
 # Egegik River
 
-As the original workup was for the Egegik River, this analysis was repeated to reflect changes between the current code and the provided spreadsheet.
+As the original workup was for the Egegik River, this analysis was repeated to reflect changes between the current code and the provided spreadsheet (originally developed by Scott Raborn).
 
 ## Model fits
 The Gompertz and logistic models fit similarly, although the logistic model peformed slightly better (lower overall deviance) and was selected for the remaining analyses (Figure  \@ref(fig:param)). 
