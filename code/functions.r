@@ -142,7 +142,7 @@ f_preds <- function(data, model){
 #     ungroup %>%
 #     summarise(end_date = round(mean(run_95))) %>% 
 #     mutate(date = as.Date(strptime(paste(year(Sys.Date()), end_date, sep='-'), "%Y-%j"))) %T>% 
-#     write_csv(., paste0('output/', folder, '/run_through.csv'))
+#     write_csv(., paste0('output/', folder, '/run_through_old.csv'))
 # }
 
 f_run_through <- function(preds, perc = 0.90, prob = 0.95){
