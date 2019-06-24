@@ -133,7 +133,6 @@ f_preds <- function(data, model){
 }
 
 # f_run_through <- function(preds){
-  
  # modeled date to 95% of run
 #   preds %>%
 #     group_by(year) %>%
@@ -145,7 +144,7 @@ f_preds <- function(data, model){
 #     write_csv(., paste0('output/', folder, '/run_through_old.csv'))
 # }
 
-f_run_through <- function(preds, perc = 0.90, prob = 0.95){
+f_run_through <- function(preds, perc = 0.95, prob = 0.95){ #change perc to 0.90 for alt run
   
   preds %>% 
     group_by(year) %>%
@@ -158,7 +157,7 @@ f_run_through <- function(preds, perc = 0.90, prob = 0.95){
   
 }
 
-f_pred_plot <- function(preds, run_through, perc = 0.90){
+f_pred_plot <- function(preds, run_through, perc = 0.95){ #change perc to 0.90 for alt run
   run_through = run_through$end_date
   
   preds %>%
@@ -329,7 +328,7 @@ f_risk_plot <- function(preds, remove_dates){
     gather(`% Chance`, Percent, -days) %>% 
     mutate(days = factor(days, levels = c('one', 'two', 'three', 'four', 'five')),
                   position = rep(1:7, each = length(unique(days)))) %>% 
-    mutate(risk = rep(c(1, 5, 10, 20, 30, 40, 50), each = 5)) %>% 
+    mutate(risk = rep(c(1, 5, 10, 20, 30, 40, 50), each = 5))->x%>% 
     ggplot(aes(risk, Percent, color = days)) +
     geom_line() +
     xlab('% Risk') +
