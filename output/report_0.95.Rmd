@@ -1,0 +1,300 @@
+---
+title: "1% Weir Escapement Rule"
+author: "Ben Williams, Sara Miller"
+date: "June, 2019"
+output:
+  bookdown::pdf_document2:
+    fig_caption: yes
+    toc: yes
+header-includes:
+ \usepackage{float}
+---
+
+```{r setup, echo = FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message = FALSE, 
+                      error=FALSE, fig.pos = 'H', out.width = '95%')
+```
+
+```{r load}
+library(here)
+library(fs)
+library(tidyverse)
+library(knitr)
+```
+
+```{r data}
+
+fs::dir_ls(here::here('output/egegik'), regexp = "\\.csv$") %>% 
+  set_names(nm = (basename(.) %>% 
+                    tools::file_path_sans_ext())) %>%
+  map(read_csv) -> tbls_egegik
+
+fs::dir_ls(here::here('output/chilkoot'), regexp = "\\.csv$") %>% 
+  set_names(nm = (basename(.) %>% 
+                    tools::file_path_sans_ext())) %>%
+  map(read_csv) -> tbls_koot
+
+fs::dir_ls(here::here('output/situk'), regexp = "\\.csv$") %>% 
+  set_names(nm = (basename(.) %>% 
+                    tools::file_path_sans_ext())) %>%
+  map(read_csv) -> tbls_situk
+
+```
+
+
+## Recipient {-}
+Steve Heinl
+
+# Background
+The objectives of this analysis were to:  
+
+  1.  Model the tails of the run to quantify a hard ending date for weir operations – the date to which the weir would be required to be operated (e.g., would capture 90% of the escapement 95% of the time on average).
+  
+  2. Estimate the % of counts missed if the project was operated past the hard ending date until daily counts equaled less than 1% of the cumulative count for 3, 4, or 5 days in a row.
+  
+  3. Analyze the Situk River and Chilkoot Lake sockeye salmon weir data to determine the hard ending date the weirs should be operated through to capture 90% of the run on average. Estimate the percent of missed counts if the project was operated past the hard ending date until daily counts equaled less than 1% of the cumulative count for 3, 4, or 5 days in a row. 
+  
+  4. For alternate runs (i.e. changes to the x% of the escapment 95% of the time on average), in the functions code, change the f_run_through function perc to desired percentage and change the f_pred_plot function perc to the desired percentage.
+  
+All associated files, data, and code are located at https://github.com/commfish/weiRends. This work is based upon efforts originally developed by Scott Raborn. 
+
+## Data
+
+The input data format is two columns with date (preferably in year-mm-dd format) and weir count data. 
+
+An example is:  
+date       count  
+2019-01-20  20
+
+This is for a single species at a single weir. 
+No other values or comments should be included in the file. 
+Data should be provided in .csv format. 
+
+## Analysis
+Two models were considered: 
+
+The Gompertz model 
+$$p\mathrm{e}^{{-e}^{-k(t-t_0)}},$$ 
+and the logistic model 
+$$\frac{p}{\mathrm{1+e}^{-k(t-t_0)}}.$$ 
+The variable *p* represents the asymptote of the cumulative escapement, *k* is the steepness of the curve, and *t*~0~ is the inflection point of the curve. 
+
+The evaluation process starts by fitting both models, and then the model with the least total variance is chosen for the analysis. 
+*Note that this is a coarse approach and is not a meaningful model comparison*.
+Cumulative run is predicted from the selected model and then this is converted into the number of estimated fish past the weir for a given day.
+A reconstructed run is estimated using observed daily data, filling in any data gaps with estimated daily escapement numbers. 
+This reconstructed run is then used to compute a cumulative sum of escapement. 
+The date that a weir should remain in place to capture 90% of the escapement on average is calculated using the reconstructed cumulative sum.
+
+
+# Egegik River
+
+As the original workup was for the Egegik River, this analysis was repeated to reflect changes between the current code and the provided spreadsheet (originally developed by Scott Raborn).
+
+## Model fits
+The Gompertz and logistic models fit similarly, although the logistic model peformed slightly better (lower overall deviance) and was selected for the remaining analyses (Figure  \@ref(fig:param)). 
+Note that the provided spreadsheet used the Gompertz model.
+
+```{r param, fig.cap="Parameter estimates from the logistic model for the Egegik River."}
+knitr::include_graphics(here("figs/egegik/param_plot.png"))
+```
+
+The predicted data showed a reasonable model fit for most years (Figure  \@ref(fig:pred)). 
+Based upon all years of data, the date that 90% of the escapement passes the weir 95% of the time is `r tbls_egegik$run_through$date`. 
+This is the date that the weir must be operated through, i.e., removal could occur on the following day.
+
+```{r pred, fig.cap="Predicted cumulative escapements by year for the Egegik River. Filled circles indicate 90\\% of the run has passed the weir. The vertical line is the mean date when 90\\% of the run has passed the weir. The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
+knitr::include_graphics(here("figs/egegik/pred_plot.png"))
+```
+
+```{r pred-decade, fig.cap="Predicted cumulative escapements by year and decade for the Egegik River. Filled circles indicate 90\\% of the run has passed the weir. The vertical line is the mean date when 90\\% of the run has passed the weir."}
+knitr::include_graphics(here("figs/egegik/pred_plot_decade.png"))
+```
+
+Based upon median removal dates presented in Table \@ref(tab:remove-eg), there is a 95% chance of capturing 95-97% of the total run, depending on which weir removal rule (# of days) is implemented (Table \@ref(tab:chance-eg)).
+
+```{r remove-eg, results = 'asis'}
+tbls_egegik$remove_dates_median_end %>% 
+   knitr::kable(format = 'pandoc', caption = 'Median end dates for weir removal based upon number of days to implement the 1% rule for the Egegik River.')
+```
+
+\pagebreak
+
+```{r chance-eg, results = 'asis'}
+tbls_egegik$remove_dates_run_caught %>% 
+   knitr::kable(format = 'pandoc', caption = 'The percent of the run that is caught at a given risk level (% Chance) based upon the number of days the 1% rule is implemented for the Egegik River.')
+```
+
+This is inversely reflected in the percent risk figure (Figure \@ref(fig:risk)) that shows the risk that a given percentage of the run is missed.
+
+```{r risk, fig.cap="The percent of the run that is missed at a given risk level, e.g., 2.5\\% of the run will be missed 5\\% of the time using a five day 1\\% rule for the Egegik River."}
+knitr::include_graphics(here("figs/egegik/remove_dates_risk_plot.png"))
+```
+
+The percent of the run that would be missed is further examined in Table \@ref(tab:risk2). Overall, this run is well represented by the 1% rule with a low potential for missing 5% or more of the run, and a reasonable risk of missing only 1% of the total run.
+
+```{r risk2, results = 'asis'}
+tbls_egegik$remove_dates_run_risk %>% 
+   knitr::kable(format = 'pandoc', caption = 'The percent of risk that a given % of the run is missed for the Egegik River.')
+```
+
+# Chilkoot River
+
+## 1% Rule
+The logistic model provided an overall better fit to the data than the Gompertz model. 
+None of the parameter estimates had substantial error bars (Figure \@ref(fig:param-koot)) and the models converged for all years.
+The predicted data showed a reasonable model fit for most years (Figures  \@ref(fig:pred-koot) & \@ref(fig:pred-decade-koot)). 
+Based upon all years of data, the 90% mean passage weir removal date is `r tbls_koot$run_through$date`. 
+This is the date that the weir must be operated through, i.e., removal could occur on the following day.
+
+```{r param-koot, fig.cap="Parameter estimates from the logistic model for the Chilkoot River."}
+knitr::include_graphics(here("figs/chilkoot/param_plot.png"))
+```
+
+```{r pred-koot, fig.cap="Predicted cumulative escapements by year for the Chilkoot River. Filled circles indicate 90\\% of the run has passed the weir. The vertical line is the mean date when 90\\% of the run has passed the weir.The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
+knitr::include_graphics(here("figs/chilkoot/pred_plot.png"))
+```
+
+```{r pred-decade-koot, fig.cap="Predicted cumulative escapements by year and decade for the Chilkoot River. Filled circles indicate 90\\% of the run has passed the weir. The vertical line is the mean date when 90\\% of the run has passed the weir."}
+knitr::include_graphics(here("figs/chilkoot/pred_plot_decade.png"))
+```
+
+Based upon median removal dates presented in Table \@ref(tab:remove-koot), there is a 95% chance of capturing 89% of the total run for all weir removal rules (# of days) (Table \@ref(tab:chance-koot)).
+Note that there is a 50% chance of capturing 99% of the run.
+
+```{r remove-koot, results = 'asis'}
+tbls_koot$remove_dates_median_end %>% 
+   knitr::kable(format = 'pandoc', caption = 'Median end dates for weir removal based upon number of days to implement the 1% rule for the Chilkoot River.')
+```
+
+\pagebreak
+
+```{r chance-koot, results = 'asis'}
+tbls_koot$remove_dates_run_caught %>% 
+   knitr::kable(format = 'pandoc', caption = 'The percent of the run that is caught at a given risk level (% Chance) based upon the number of days the 1% rule is implemented for the Chilkoot River.')
+```
+
+The 1% rule does not extend the median end date (Table \@ref(tab:remove-koot)) which is reflected in the percent risk as well (Figure \@ref(fig:risk-koot)). 
+
+
+```{r risk-koot, fig.cap="The percent of the run that will be missed at a given risk level, e.g., 11\\% of the run will be missed 5\\% of the time using a five day 1\\% rule for the Chilkoot River."}
+knitr::include_graphics(here("figs/chilkoot/remove_dates_risk_plot.png"))
+```
+
+The percent of the run that would be missed is further examined in Table \@ref(tab:risk2-koot). 
+Overall, this run is not well represented by the 1% rule as the rule would not extend the median removal date. 
+The reason for this is that the run past the 90% removal date occurs in daily numbers that are less than 1% of the cumulative run for those days. Therefore, an additional weir removal rule of 0.05% passage was explored.
+
+```{r risk2-koot, results = 'asis'}
+tbls_koot$remove_dates_run_risk %>% 
+   knitr::kable(format = 'pandoc', caption = 'The percent of the run that is caught at a given risk level (% Chance) based upon the number of days the 1% rule is implemented for the Chilkoot River.')
+```
+
+## 0.05% Rule
+
+Using a 0.05% rule did not adjust the median removal date (Table \@ref(tab:remove05-koot)), but slighlty improved the chance that the majority of the run was observed (Table \@ref(tab:chance05-koot)).
+The 0.05% rule decreased the percent risk (Figure \@ref(fig:risk05-koot)).
+
+```{r remove05-koot, results = 'asis'}
+tbls_koot$remove_dates_05_median_end %>% 
+   knitr::kable(format = 'pandoc', caption = 'Median end dates for weir removal based upon number of days to implement the 0.05% rule for the Chilkoot River.')
+```
+
+```{r chance05-koot, results = 'asis'}
+tbls_koot$remove_dates_05_run_caught %>% 
+   knitr::kable(format = 'pandoc', caption = 'The percent of the run that is caught at a given risk level (% Chance) based upon the number of days the 0.05% rule is implemented for the Chilkoot River.')
+```
+
+```{r risk05-koot, fig.cap="The percent of the run that will be missed at a given risk level, e.g., 7\\% of the run will be missed 5\\% of the time using a five day 0.05\\% rule for the Chilkoot River."}
+knitr::include_graphics(here("figs/chilkoot/remove_dates_05_risk_plot.png"))
+```
+
+The percent of the run that would be missed is further examined in Table \@ref(tab:risk205-koot). 
+Overall, this run is not well represented by the 0.05% rule as the rule would not extend the median removal date. 
+The reason for this is that the run past the 90% removal date occurs in daily numbers that are less than 0.05% of the cumulative run for those days.
+
+```{r risk205-koot, results = 'asis'}
+tbls_koot$remove_dates_05_run_risk %>% 
+   knitr::kable(format = 'pandoc', caption = 'The percent of risk that a given % of the run is missed for the Chilkoot River.')
+```
+
+# Situk River
+
+## 1% Rule
+The Gompertz model provided an overall better fit to the data than the logistic model for the Situk River. 
+None of the parameter estimates had substantial error bars (Figure \@ref(fig:param-situk)) and the models converged for all years.
+The predicted data showed a reasonable model fit for most years (Figures  \@ref(fig:pred-situk) & \@ref(fig:pred-decade-situk)). 
+Based upon all years of data, the 90% mean passage weir removal date is `r tbls_situk$run_through$date`. 
+This is the date that the weir must be operated through, i.e., removal could occur on the following day.
+
+
+```{r param-situk, fig.cap="Parameter estimates from the Gompertz model for the Situk River."}
+knitr::include_graphics(here("figs/situk/param_plot.png"))
+```
+
+```{r pred-situk, fig.cap="Predicted cumulative escapements by year for the Situk River. Filled circles indicate 90\\% of the run has passed the weir. The vertical line is the date where 90\\% of escapement has occurred 95\\% of the time. The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
+knitr::include_graphics(here("figs/situk/pred_plot.png"))
+```
+
+```{r pred-decade-situk, fig.cap="Predicted cumulative escapements by year and decade for the Situk River. Filled circles indicate 90\\% of the run has passed the weir. The vertical line is the date where 90\\% of escapement has occurred 95\\% of the time. The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
+knitr::include_graphics(here("figs/situk/pred_plot_decade.png"))
+```
+
+
+Based upon median removal dates presented in Table \@ref(tab:remove-situk), there is a 95% chance of capturing 91% of the total run for all weir removal rules (# of days) (Table \@ref(tab:chance-situk)).
+Note that there is a 50% chance of capturing 95% of the run.
+
+```{r remove-situk, results = 'asis'}
+tbls_situk$remove_dates_median_end %>% 
+   knitr::kable(format = 'pandoc', caption = 'Median end dates for weir removal based upon number of days to implement the 1% rule for the Situk River.')
+```
+
+\pagebreak
+
+```{r chance-situk, results = 'asis'}
+tbls_situk$remove_dates_run_caught %>% 
+   knitr::kable(format = 'pandoc', caption = 'The percent of the run that is caught at a given risk level (% Chance) based upon the number of days the 1% rule is implemented for the Situk River.')
+```
+
+The 1% rule does not extend the median end date (Table \@ref(tab:remove-situk)) which is reflected in the percent risk as well (Figure \@ref(fig:risk-situk)). 
+
+```{r risk-situk, fig.cap="The percent of risk that a given \\% of the run is missed, e.g., 8\\% of the run will be missed 5\\% of the time using a five day 1\\% rule for the Situk River."}
+knitr::include_graphics(here("figs/situk/remove_dates_risk_plot.png"))
+```
+
+The percent of the run that would be missed is further examined in Table \@ref(tab:risk2-situk). 
+Overall, this run is not well represented by the 1% rule and would not extend the median removal date. 
+The reason for this is that the run past the 90% removal date occurs in daily numbers that are less than 1% of the cumulative run for those days. Therefore, an additional weir removal rule of 0.05% passage was explored.
+
+```{r risk2-situk, results = 'asis'}
+tbls_situk$remove_dates_run_risk %>% 
+   knitr::kable(format = 'pandoc', caption = 'The percent of risk that a given % of the run is missed for the Situk River.')
+```
+
+## 0.05\% Rule
+
+Using a 0.05% rule proved to adjust the median removal date (Table \@ref(tab:remove05-situk)) and substantially improved the chance that the majority of the run was observed (Table \@ref(tab:chance05-situk)).
+The 0.05% rule decreased the percent risk (Figure \@ref(fig:risk05-situk)).
+
+```{r remove05-situk, results = 'asis'}
+tbls_situk$remove_dates_05_median_end %>% 
+   knitr::kable(format = 'pandoc', caption = 'Median end dates for weir removal based upon number of days to implement the 0.05% rule for the Situk River.')
+```
+
+```{r chance05-situk, results = 'asis'}
+tbls_situk$remove_dates_05_run_caught %>% 
+   knitr::kable(format = 'pandoc', caption = 'The percent of the run that is caught at a given risk level (% Chance) based upon the number of days the 0.05% rule is implemented for the Situk River.')
+```
+
+```{r risk05-situk, fig.cap="The percent of the run that will be missed at a given risk level, e.g., 3\\% of the run will be missed 5\\% of the time using a five day 0.05\\% rule for the Situk River."}
+knitr::include_graphics(here("figs/situk/remove_dates_05_risk_plot.png"))
+```
+
+The percent of the run that would be missed is further examined in Table \@ref(tab:risk205-situk). 
+Overall, this run is well represented by the 0.05% rule with a low potential for missing 5% or more of the run, and a reasonable risk of missing only 1% of the total run.
+
+```{r risk205-situk, results = 'asis'}
+tbls_situk$remove_dates_05_run_risk %>% 
+   knitr::kable(format = 'pandoc', caption = 'The percent of risk that a given % of the run is missed for the Situk River.')
+```
+
