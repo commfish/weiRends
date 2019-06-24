@@ -156,8 +156,8 @@ knitr::include_graphics(here("figs/chilkoot/pred_plot.png"))
 knitr::include_graphics(here("figs/chilkoot/pred_plot_decade.png"))
 ```
 
-Based upon median removal dates presented in Table \@ref(tab:remove-koot), there is a 95% chance of capturing 89% of the total run, depending on which weir removal rule (# of days) is implemented (Table \@ref(tab:chance-koot)).
-Note that there is a 50% chance of capturing 99% of the run, which is slightly lower than the expected 95% based upon the mean passage date stated previously.
+Based upon median removal dates presented in Table \@ref(tab:remove-koot), there is a 95% chance of capturing 89% of the total run, for all weir removal rules (# of days) (Table \@ref(tab:chance-koot)).
+Note that there is a 50% chance of capturing 99% of the run.
 
 ```{r remove-koot, results = 'asis'}
 tbls_koot$remove_dates_median_end %>% 
@@ -189,7 +189,7 @@ tbls_koot$remove_dates_run_risk %>%
 
 ## 0.05% Rule
 
-Using a 0.05% rule proved to adjust the median removal date (Table \@ref(tab:remove05-koot)) and substantially improved the chance that the majority of the run was observed (Table \@ref(tab:chance05-koot)).
+Using a 0.05% rule did not adjust the median removal date (Table \@ref(tab:remove05-koot)), but slighlty improved the chance that the majority of the run was observed (Table \@ref(tab:chance05-koot)).
 The 0.05% rule decreased the percent risk (Figure \@ref(fig:risk05-koot)).
 
 ```{r remove05-koot, results = 'asis'}
@@ -237,8 +237,8 @@ knitr::include_graphics(here("figs/situk/pred_plot_decade.png"))
 ```
 
 
-Based upon median removal dates presented in Table \@ref(tab:remove-situk), there is a 95% chance of capturing 89-90% of the total run, depending on which weir removal rule (# of days) is implemented (Table \@ref(tab:chance-situk)).
-Note that there is a 50% chance of capturing 95% of the run, e.g., the mean 95% passage date stated previously.
+Based upon median removal dates presented in Table \@ref(tab:remove-situk), there is a 95% chance of capturing 91% of the total run, for all weir removal rules (# of days) (Table \@ref(tab:chance-situk)).
+Note that there is a 50% chance of capturing 95% of the run.
 
 ```{r remove-situk, results = 'asis'}
 tbls_situk$remove_dates_median_end %>% 
@@ -254,13 +254,13 @@ tbls_situk$remove_dates_run_caught %>%
 
 The 1% rule does not extend the median end date (Table \@ref(tab:remove-situk)) which is reflected in the percent risk as well (Figure \@ref(fig:risk-situk)). 
 
-```{r risk-situk, fig.cap="The percent of risk that a given \\% of the run is missed, e.g., 10\\% of the run will be missed 5\\% of the time using a five day 1\\% rule for the Situk River."}
+```{r risk-situk, fig.cap="The percent of risk that a given \\% of the run is missed, e.g., 8\\% of the run will be missed 5\\% of the time using a five day 1\\% rule for the Situk River."}
 knitr::include_graphics(here("figs/situk/remove_dates_risk_plot.png"))
 ```
 
 The percent of the run that would be missed is further examined in Table \@ref(tab:risk2-situk). 
 Overall, this run is not well represented by the 1% rule and would not extend the median removal date. 
-The reason for this is that the run past the 95% removal date occurs in daily numbers that are less than 1% of the cumulative run for those days. Therefore, an additional weir removal rule of 0.05% passage was explored.
+The reason for this is that the run past the 90% removal date occurs in daily numbers that are less than 1% of the cumulative run for those days. Therefore, an additional weir removal rule of 0.05% passage was explored.
 
 ```{r risk2-situk, results = 'asis'}
 tbls_situk$remove_dates_run_risk %>% 
@@ -282,7 +282,7 @@ tbls_situk$remove_dates_05_run_caught %>%
    knitr::kable(format = 'pandoc', caption = 'The percent of the run that is caught at a given risk level (% Chance) based upon the number of days the 0.05% rule is implemented for the Situk River.')
 ```
 
-```{r risk05-situk, fig.cap="he percent of the run that will be missed at a given risk level, e.g., 5\\% chance that 4\\% of the run will be missed using a five day 0.05\\% rule for the Situk River."}
+```{r risk05-situk, fig.cap="The percent of the run that will be missed at a given risk level, e.g., 5\\% chance that 3\\% of the run will be missed using a five day 0.05\\% rule for the Situk River."}
 knitr::include_graphics(here("figs/situk/remove_dates_05_risk_plot.png"))
 ```
 
