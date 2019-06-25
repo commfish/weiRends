@@ -144,7 +144,7 @@ f_preds <- function(data, model){
 #     write_csv(., paste0('output/', folder, '/run_through_old.csv'))
 # }
 
-f_run_through <- function(preds, perc = 0.90, prob = 0.95){ #change perc to 0.90 for alt run
+f_run_through <- function(preds, perc = 0.95, prob = 0.95){ #change perc to 0.90 for alt run
   
   preds %>% 
     group_by(year) %>%
@@ -157,7 +157,7 @@ f_run_through <- function(preds, perc = 0.90, prob = 0.95){ #change perc to 0.90
   
 }
 
-f_pred_plot <- function(preds, run_through, perc = 0.90){ #change perc to 0.90 for alt run
+f_pred_plot <- function(preds, run_through, perc = 0.95){ #change perc to 0.90 for alt run
   run_through = run_through$end_date
   
   preds %>%
@@ -186,7 +186,7 @@ f_pred_plot <- function(preds, run_through, perc = 0.90){ #change perc to 0.90 f
   x
 }
 
-f_pred_plot_decade <- function(preds, run_through, perc = 0.90){
+f_pred_plot_decade <- function(preds, run_through, perc = 0.95){
   run_through = run_through$end_date
   
   preds %>%
