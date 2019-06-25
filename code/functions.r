@@ -186,7 +186,7 @@ f_pred_plot <- function(preds, run_through, perc = 0.95){ #change perc to 0.90 f
   x
 }
 
-f_pred_plot_decade <- function(preds, run_through, perc = 0.90){
+f_pred_plot_decade <- function(preds, run_through, perc = 0.95){
   run_through = run_through$end_date
   
   preds %>%
@@ -328,7 +328,7 @@ f_risk_plot <- function(preds, remove_dates){
     gather(`% Chance`, Percent, -days) %>% 
     mutate(days = factor(days, levels = c('one', 'two', 'three', 'four', 'five')),
                   position = rep(1:7, each = length(unique(days)))) %>% 
-    mutate(risk = rep(c(1, 5, 10, 20, 30, 40, 50), each = 5))->x%>% 
+    mutate(risk = rep(c(1, 5, 10, 20, 30, 40, 50), each = 5))%>% 
     ggplot(aes(risk, Percent, color = days)) +
     geom_line() +
     xlab('% Risk') +

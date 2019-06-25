@@ -54,7 +54,7 @@ The objectives of this analysis were to:
   
   3. Analyze the Situk River and Chilkoot Lake sockeye salmon weir data to determine the hard ending date the weirs should be operated through to capture 95% of the run on average. Estimate the percent of missed counts if the project was operated past the hard ending date until daily counts equaled less than 1% of the cumulative count for 3, 4, or 5 days in a row. 
   
-  4. For alternate runs (i.e. changes to the x% of the escapment 95% of the time on average), in the functions code, change the f_run_through function perc to desired percentage and change the f_pred_plot function perc to the desired percentage.
+  4. For alternate runs (i.e. changes to the x% of the escapement 95% of the time on average), in the functions code, change the f_run_through function perc to desired the percentage, change the f_pred_plot function perc to the desired percentage, and change the f_pred_plot_decade function perc to desired the percentage.
   
 All associated files, data, and code are located at https://github.com/commfish/weiRends. This work is based upon efforts originally developed by Scott Raborn. 
 
@@ -192,8 +192,7 @@ tbls_koot$remove_dates_run_risk %>%
 
 ## 0.05% Rule
 
-Using a 0.05% rule did not adjust the median removal date (Table \@ref(tab:remove05-koot)), and did not improve the chance that the majority of the run was observed (Table \@ref(tab:chance05-koot)).
-The 0.05% rule decreased the percent risk (Figure \@ref(fig:risk05-koot)).
+Using a 0.05% rule did not adjust the median removal date (Table \@ref(tab:remove05-koot)), did not improve the chance that the majority of the run was observed (Table \@ref(tab:chance05-koot)), and did not decrease the percent risk (Figure \@ref(fig:risk05-koot)).
 
 ```{r remove05-koot, results = 'asis'}
 tbls_koot$remove_dates_05_median_end %>% 
