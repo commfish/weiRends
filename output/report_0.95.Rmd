@@ -54,7 +54,7 @@ The objectives of this analysis were to:
   
   3. Analyze the Situk River and Chilkoot Lake sockeye salmon weir data to determine the hard ending date the weirs should be operated through to capture 95% of the run on average. Estimate the percent of missed counts if the project was operated past the hard ending date until daily counts equaled less than 1% of the cumulative count for 3, 4, or 5 days in a row. 
   
-  4. For alternate runs (i.e. changes to the x% of the escapement 95% of the time on average), in the functions code, change the f_run_through function perc to desired the percentage, change the f_pred_plot function perc to the desired percentage, and change the f_pred_plot_decade function perc to desired the percentage.
+  4. For alternate runs (i.e. capture x% of the escapement 95% of the time on average), in the functions code, change the f_run_through function perc to desired the percentage, change the f_pred_plot function perc to the desired percentage, and change the f_pred_plot_decade function perc to desired the percentage.
   
 All associated files, data, and code are located at https://github.com/commfish/weiRends. This work is based upon efforts originally developed by Scott Raborn. 
 
@@ -272,7 +272,7 @@ tbls_situk$remove_dates_run_risk %>%
 
 ## 0.05\% Rule
 
-Using a 0.05% rule proved to adjust the median removal date (Table \@ref(tab:remove05-situk)) and substantially improved the chance that the majority of the run was observed (Table \@ref(tab:chance05-situk)).
+Using a 0.05% rule did not adjust the median removal date (Table \@ref(tab:remove05-situk)) but slighlty improved the chance that the majority of the run was observed (Table \@ref(tab:chance05-situk)).
 The 0.05% rule decreased the percent risk (Figure \@ref(fig:risk05-situk)).
 
 ```{r remove05-situk, results = 'asis'}
@@ -290,7 +290,7 @@ knitr::include_graphics(here("figs/situk/remove_dates_05_risk_plot.png"))
 ```
 
 The percent of the run that would be missed is further examined in Table \@ref(tab:risk205-situk). 
-Overall, this run is well represented by the 0.05% rule with a low potential for missing 5% or more of the run, and a reasonable risk of missing only 1% of the total run.
+Overall, this run is well represented by the 0.05% rule with a low potential for missing 5% or more of the run, and a moderate risk of missing only 1% of the total run.
 
 ```{r risk205-situk, results = 'asis'}
 tbls_situk$remove_dates_05_run_risk %>% 

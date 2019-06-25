@@ -29,13 +29,13 @@ read_csv('data/egegik.csv') -> egegik
 f_clean_data(egegik) -> df
 
 # model
-# f_gomp_model(df) -> model
-# saveRDS(model, paste0('output/', folder, '/model.rda'))
+#f_gomp_model(df) -> model
+#saveRDS(model, paste0('output/', folder, '/model.rda'))
 readRDS(paste0('output/', folder, '/model.rda')) -> model
 
 # model logistic function
-# f_logistic_model(df) -> model_logistic
-# saveRDS(model_logistic, paste0('output/', folder, '/logistic_model.rda'))
+#f_logistic_model(df) -> model_logistic
+#saveRDS(model_logistic, paste0('output/', folder, '/logistic_model.rda'))
 readRDS(paste0('output/', folder, '/logistic_model.rda')) -> model_logistic
 
 # check model fits - did all models converge?
