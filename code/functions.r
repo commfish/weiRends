@@ -1,4 +1,5 @@
 #https://github.com/padpadpadpad/nls.multstart
+# last updated by SEM: October 15, 2021
 f_clean_data <- function(data){
   
   data %>%

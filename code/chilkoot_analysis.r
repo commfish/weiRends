@@ -3,7 +3,7 @@
 
 # ben.williams@alaska.gov
 # 2019-03
-
+# last updated by SEM: October 15, 2021
 # Notes:
 # 1. calculate end date of weir deployment
 # 2. model tails of the runs, by year - Gompertz model
