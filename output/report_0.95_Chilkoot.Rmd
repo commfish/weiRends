@@ -1,0 +1,186 @@
+---
+title: "1% Weir Escapement Rule"
+author: "Sara Miller"
+date: "October 12, 2021"
+output:
+  bookdown::pdf_document2:
+    fig_caption: yes
+    toc: yes
+header-includes:
+ \usepackage{float}
+---
+
+```{r setup, echo = FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message = FALSE, 
+                      error=FALSE, fig.pos = 'H', out.width = '95%')
+```
+
+```{r load}
+library(here)
+library(fs)
+library(tidyverse)
+library(knitr)
+```
+
+```{r data}
+fs::dir_ls(here::here('output/chilkoot'), regexp = "\\.csv$") %>% 
+  set_names(nm = (basename(.) %>% 
+                    tools::file_path_sans_ext())) %>%
+  map(read_csv) -> tbls_koot
+```
+
+
+## Recipient {-}
+Steve Heinl
+
+# Background
+The objectives of this analysis were to:  
+
+  1.  Model the tails of the run to quantify a hard ending date for weir operations – the date to which the weir would be required to be operated (e.g., would capture 95% of the escapement 95% of the time on average).
+  
+  2. Estimate the % of counts missed if the project was operated past the hard ending date until daily counts equaled less than 1% of the cumulative count for 3, 4, or 5 days in a row.
+  
+  3. Analyze the Chilkoot Lake sockeye salmon weir data to determine the hard ending date the weirs should be operated through to capture 95% of the run on average. Estimate the percent of missed counts if the project was operated past the hard ending date until daily counts equaled less than 1% of the cumulative count for 3, 4, or 5 days in a row. 
+  
+  4. For alternate runs (i.e., capture x% of the escapement 95% of the time on average), in the functions code, change the f_run_through function perc to the desired percentage, change the f_pred_plot function perc to the desired percentage, and change the f_pred_plot_decade function perc to the desired the percentage.
+  
+All associated files, data, and code are located at https://github.com/commfish/weiRends. This work is based upon efforts originally developed by Scott Raborn. The code was originally written by Ben Williams and then adapted by Sara Miller. 
+
+## Data
+
+The input data format is four columns with date (preferably in year-mm-dd format), weir count data, species, and year. 
+
+An example is:  
+  date      count   species  year  
+2019-07-20    20    Sockeye  2019
+
+This is for a single species at a single weir. 
+No other values or comments should be included in the file. 
+Data should be provided in .csv format. 
+
+## Code
+The five main functions are as follows:
+
+*f_run_through*: For each year, this function filters the data to only include the cumulative sums that are less than or equal to 95% of the cumulative sum, and then determines the largest Julian date that corresponds to this. For example, the total cumulative sum for 1976 is 71,291 fish. The cumulative sum on Julian date 229 (67,546 fish) represents the cumulative sum that is less than or equal to $0.95 * 71,291 = 67,726$, and is the closest to 67,726. Next, this function summarizes this Julian date for each year (i.e., one Julian date is reported for each year; 229 for 1976 for example). Finally, this function determines the 0.95 quantile of these summarized Julian dates by year. This is reported as the run_through Julian date.
+
+*f_remove_dates*: This function determines the Julian date that the weir should be removed based on a 1% rule for 2, 3, 4, or 5 days. This function first calculates the variables one_4, one_3, one_2, one_1, and one. These variables are based on different lags. Variable one_4 is lagged 4 days, variable one_3 is lagged three days, and so forth. For example, variable one_4 is the fitted run on day 147 divided by the cumulative sum on day 150. If this value is greater than 0.01 (i.e., 1%), then the variable one_4 is given a value of 1 for day 150; otherwise the variable is given a value of 0 for the particular Julian date. This is repeated for the other lag variables, including the variable one that has no lag. Next, variables two, three, four, and five (i.e., number of days) are created. Variable five is given a value of 1 if variables one_4 (lag of 4), one_3 (lag of 3), one_2 (lag of 2), one_1 (lag of 1), or one (no lag) are 1. Variable four is given a value of 1 if variables one_3, one_2, one_1, or one are 1. Variable three is given a value of 1 if variables one_2, one_1, or one are 1. Variable two is given a value of 1 if variables one_1, or one are 1. Next, by year, the data is filtered to only include Julian dates greater than or equal to the run through date (`r tbls_koot$run_through$end_date`) with a day value of one.            
+    
+*f_remove_dates_05*: This function is similar to the *f_remove_dates* function, but determines the Julian date that the weir should be removed based on a 0.05% rule for 2, 3, 4, or 5 days.
+
+*f_run_caught*: For each year, this function first determines the difference variable which is equal to 1 - (the sum of the fitted run up to one day before the mean passage weir removal date (`r tbls_koot$run_through$end_date`)) divided by the maximum cumulative sum by year. Next, the % chance is calculated, by day, as 1 - the quantile (0.99, 0.95, 0.90, 0.80, 0.70, 0.60, 0.50) of the difference variable for each day (two, three, four, or five days). For example, the 0.95-quantile is equivalent to the 95-percentile and is such that 95% of the sample is below its value and 5% is above. This is done for both the 1% and the 0.05% rule.   
+
+*f_run_risk*: This function determines the percent of the run that is caught at a given risk level (% chance) based upon the number of days the 1% rule is implemented for the Chilkoot River. For each year, this function first determines the difference variable which is equal to 1 - (the sum of the fitted run up to one day before the mean passage weir removal date (`r tbls_koot$run_through$date`)) divided by the maximum cumulative sum by year. Then the function fits a gamma distribution to this difference variable (i.e., the percent of the run missed based on the mean passage weir removal date (`r tbls_koot$run_through$date`). Using the rate and shape parameters from the gamma distribution fit, the inverse of the cumulative gamma distribution of the different bins is determined.    
+
+*f_median_end_date*: This function determines the median, lower 25% quantile, upper 75% quantile of the weir removal dates based on the 1% or the 0.05% rule. 
+
+## Analysis
+Two models were considered: 
+
+The Gompertz model 
+$$p\mathrm{e}^{{-e}^{-k(t-t_0)}},$$ 
+and the logistic model 
+$$\frac{p}{\mathrm{1+e}^{-k(t-t_0)}}.$$ 
+The variable *p* represents the asymptote of the cumulative escapement, *k* is the steepness of the curve, and *t*~0~ is the inflection point of the curve. 
+
+The evaluation process starts by fitting both models, and then the model with the least total variance is chosen for the analysis. 
+*Note that this is a coarse approach and is not a meaningful model comparison*.
+Cumulative run is predicted from the selected model and then this is converted into the number of estimated fish past the weir for a given day.
+A reconstructed run is estimated using observed daily data, filling in any data gaps with estimated daily escapement numbers. 
+This reconstructed run is then used to compute a cumulative sum of escapement. 
+The date that a weir should remain in place to capture 95% of the escapement on average is calculated using the reconstructed cumulative sum.
+
+# Chilkoot River
+## Data
+
+```{r fitted-plot-koot, fig.cap = "Top: Raw and fitted cumulative sums of the weir counts by year. Bottom: Difference between the raw and fitted cumulative sums of the weir counts by year. The difference between the raw and fitted cumulative sums is the modelled tails."} 
+knitr::include_graphics(here("figs/chilkoot/fitted_plot.png"))
+```
+
+## 1% Rule
+Based on the model deviance, the logistic model provided an overall better fit to the data than the Gompertz model. None of the parameter estimates had substantial error bars (Figure \@ref(fig:param-koot)) and the models converged for all years. The predicted data showed a reasonable model fit for most years (Figures  \@ref(fig:pred-koot) & \@ref(fig:pred-decade-koot)); although in some years there was a substantial difference between the cumulative sums and fitted cumulative sums (Figure \@ref(fig:fitted-plot-koot)). Based upon all years of data, the 95% mean passage weir removal date is `r tbls_koot$run_through$date`. This is the date that the weir must be operated through, i.e., removal could occur on the following day. In three data years (1999, 2005, 2007), 95% of the run had passed the weir at a Julian date greater than the mean passage weir removal date (`r tbls_koot$run_through$end_date`; see Appendix).
+
+```{r param-koot, fig.cap="Parameter estimates from the logistic model for the Chilkoot River."}
+knitr::include_graphics(here("figs/chilkoot/param_plot.png"))
+```
+
+```{r pred-koot, fig.cap="Predicted cumulative escapements by year for the Chilkoot River. Filled circles indicate 95\\% of the run has passed the weir. The vertical line is the mean date when 95\\% of the run has passed the weir. The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
+knitr::include_graphics(here("figs/chilkoot/pred_plot.png"))
+```
+
+```{r pred-decade-koot, fig.cap="Predicted cumulative escapements by year and decade for the Chilkoot River. Filled circles indicate 95\\% of the run has passed the weir. The vertical line is the mean date when 95\\% of the run has passed the weir."}
+knitr::include_graphics(here("figs/chilkoot/pred_plot_decade.png"))
+```
+
+Based upon median removal dates presented in Table \@ref(tab:remove-koot), there is a 95% chance of capturing 95% of the total run for all weir removal rules (# of days) (Table \@ref(tab:chance-koot)).
+Note that there is a 50% chance of capturing >99% of the run.
+
+```{r remove-koot, results = 'asis'}
+tbls_koot$remove_dates_median_end %>% 
+   knitr::kable(format = 'pandoc', caption = 'Median end dates for weir removal based upon number of days to implement the 1% rule for the Chilkoot River.')
+```
+
+\pagebreak
+
+```{r chance-koot, results = 'asis'}
+tbls_koot$remove_dates_run_caught %>% 
+   knitr::kable(format = 'pandoc', caption = 'The percent of the run that is caught at a given risk level (% Chance) based upon the number of days the 1% rule is implemented for the Chilkoot River.')
+```
+
+The 1% rule does not extend the median end date (Table \@ref(tab:remove-koot)) which is reflected in the percent risk as well (Figure \@ref(fig:risk-koot)). Figure \@ref(fig:risk-koot) reflects the inverse of Table \@ref(tab:chance-koot). For example, a 99% chance is the same as a 1% risk. About 7%  of the run is missed (i.e., 93% caught) at a given risk level (99% chance or 1% risk level) based on five days that the 1% rule is 
+implemented for the Chilkoot River.
+
+
+```{r risk-koot, fig.cap="The percent of the run that will be missed at a given risk level, e.g., 5\\% of the run will be missed 5\\% of the time using a five day 1\\% rule for the Chilkoot River."}
+knitr::include_graphics(here("figs/chilkoot/remove_dates_risk_plot.png"))
+```
+
+
+The percent of the run that would be missed is further examined in Table \@ref(tab:risk2-koot). 
+Overall, this run is not well represented by the 1% rule as the rule would not extend the median removal date. 
+The reason for this is that the run past the 95% removal date occurs in daily numbers that are less than 1% of the cumulative run for those days. Therefore, an additional weir removal rule of 0.05% passage was explored.
+
+```{r risk2-koot, results = 'asis'}
+tbls_koot$remove_dates_run_risk %>% 
+   knitr::kable(format = 'pandoc', caption = 'The percent of the run that is caught at a given risk level (% chance) based upon the number of days the 1% rule is implemented for the Chilkoot River.')
+```
+
+## 0.05% Rule
+
+Using a 0.05% rule did not adjust the median removal date (Table \@ref(tab:remove05-koot)), did not improve the chance that the majority of the run was observed (Table \@ref(tab:chance05-koot)), and did not decrease the percent risk (Figure \@ref(fig:risk05-koot)).
+
+```{r remove05-koot, results = 'asis'}
+tbls_koot$remove_dates_05_median_end %>% 
+   knitr::kable(format = 'pandoc', caption = 'Median end dates for weir removal based upon number of days to implement the 0.05% rule for the Chilkoot River.')
+```
+
+```{r chance05-koot, results = 'asis'}
+tbls_koot$remove_dates_05_run_caught %>% 
+   knitr::kable(format = 'pandoc', caption = 'The percent of the run that is caught at a given risk level (% Chance) based upon the number of days the 0.05% rule is implemented for the Chilkoot River.')
+```
+
+```{r risk05-koot, fig.cap="The percent of the run that will be missed at a given risk level, e.g., 5\\% of the run will be missed 5\\% of the time using a five day 0.05\\% rule for the Chilkoot River."}
+knitr::include_graphics(here("figs/chilkoot/remove_dates_05_risk_plot.png"))
+```
+
+The percent of the run that would be missed is further examined in Table \@ref(tab:risk205-koot). 
+Overall, this run is not well represented by the 0.05% rule as the rule would not extend the median removal date. 
+The reason for this is that the run past the 95% removal date occurs in daily numbers that are less than 0.05% of the cumulative run for those days.
+
+```{r risk205-koot, results = 'asis'}
+tbls_koot$remove_dates_05_run_risk %>% 
+   knitr::kable(format = 'pandoc', caption = 'The percent of risk that a given % of the run is missed for the Chilkoot River.')
+```
+
+## Appendix
+```{r pred-plot1, fig.cap="Predicted cumulative escapements by year for the Chilkoot River. Filled circles indicate 95\\% of the run has passed the weir. The vertical line is the mean date when 95\\% of the run has passed the weir. The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
+knitr::include_graphics(here("figs/chilkoot/pred_plot_1990year.png"))
+```
+
+```{r pred-plot2, fig.cap="Predicted cumulative escapements by year for the Chilkoot River. Filled circles indicate 95\\% of the run has passed the weir. The vertical line is the mean date when 95\\% of the run has passed the weir. The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
+knitr::include_graphics(here("figs/chilkoot/pred_plot_1991year.png"))
+```
+
+```{r pred-plot3, fig.cap="Predicted cumulative escapements by year for the Chilkoot River. Filled circles indicate 95\\% of the run has passed the weir. The vertical line is the mean date when 95\\% of the run has passed the weir. The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
+knitr::include_graphics(here("figs/chilkoot/pred_plot_2001year.png"))
+```
+

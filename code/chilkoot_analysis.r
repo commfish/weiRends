@@ -7,8 +7,7 @@
 # Notes:
 # 1. calculate end date of weir deployment
 # 2. model tails of the runs, by year - Gompertz model
-# 3. estimate the date required to operate through
-# so that 95% of the escapement on average is observed
+# 3. estimate the date required to operate through so that 95% of the escapement on average is observed
 # 4. weir 1% rule - based upon 5,4, 3, or 2 days meeting the 1% requirement
 
 # load ----
@@ -21,8 +20,9 @@ folder <- 'chilkoot'
 # data ----
 # data inputs are date (mm/dd/yyyy) and weir count
 
-read_csv('data/chilkoot_weir_1976-2018.csv') %>% 
-  filter(Species=='Sockeye') %>% 
+#read_csv('data/chilkoot_weir_1976-2018.csv') %>% 
+read_csv('data/chilkoot_weir_1976-2021.csv') %>% 
+  filter(species=='Sockeye') %>% 
   dplyr::select(date, count) -> chilkoot
 
 # run functions ----
@@ -31,13 +31,13 @@ read_csv('data/chilkoot_weir_1976-2018.csv') %>%
 f_clean_data(chilkoot) -> df
 
 # model
-#f_gomp_model(df) -> model
-#saveRDS(model, paste0('output/', folder, '/model.rda'))
+f_gomp_model(df) -> model
+saveRDS(model, paste0('output/', folder, '/model.rda'))
 readRDS(paste0('output/', folder, '/model.rda')) -> model
 
 # model logistic function
-#f_logistic_model(df) -> model_logistic
-#saveRDS(model_logistic, paste0('output/', folder, '/logistic_model.rda'))
+f_logistic_model(df) -> model_logistic
+saveRDS(model_logistic, paste0('output/', folder, '/logistic_model.rda'))
 readRDS(paste0('output/', folder, '/logistic_model.rda')) -> model_logistic
 
 # check model fits - did all models converge?
@@ -52,7 +52,7 @@ f_summary(model_logistic)
 f_deviance(model, model_logistic) # check model fits - did all models converge?
 
 # get parameters
-f_params(model_logistic) -> params
+f_params(model_logistic) -> params # choose model based on deviance
 
 # plot parameter fits - because why not?
 f_param_plot(params)
@@ -60,9 +60,22 @@ f_param_plot(params)
 # predict the model on a complete dataset
 f_preds(df, model_logistic) -> preds
 
+# table of data cumsum and fit_cumsum
+f_table_output(preds)
+
+# plot of data cumsum and fit_cumsum
+tickryr <- data.frame(year = 1975:2025)
+axisf <- tickr(tickryr, year, 5)
+f_plot_output(preds)
+
 # what is the minimum day that the weir should be in place?
 # the Julian date that 95% of the modeled run has been observed - on average
 f_run_through(preds) -> run_through
+
+# plots of fits
+f_pred1990_plot(preds, run_through)
+f_pred1991_plot(preds, run_through)
+f_pred2001_plot(preds, run_through)
 
 # plot the predicted data
 f_pred_plot(preds, run_through)

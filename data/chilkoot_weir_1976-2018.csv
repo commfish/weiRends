@@ -1,4 +1,4 @@
-weir,year,stat_week,date,Species,count_type,maturity,count,comments
+weir,year,stat_week,date,species,count_type,maturity,count,comments
 Chilkoot Lake,1976,23,5/30/1976,Sockeye,Counted live,Adult,8,
 Chilkoot Lake,1976,23,5/31/1976,Sockeye,Counted live,Adult,13,
 Chilkoot Lake,1976,23,6/1/1976,Sockeye,Counted live,Adult,11,
