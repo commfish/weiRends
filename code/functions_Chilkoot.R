@@ -105,8 +105,10 @@ f_params <- function(model){
 f_param_plot <- function(params){
   
   params %>% 
+    rename (Year = year) %>%
+    rename (Estimate = estimate) %>%
     mutate(term = ifelse(term=='pop', 'p', term)) %>% 
-    ggplot(aes(year, estimate)) +
+    ggplot(aes(Year, Estimate)) +
     geom_point(alpha = .2) +
     geom_line(alpha = 0.5) +
     geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3) +
@@ -144,7 +146,7 @@ f_preds <- function(data, model){
   
 }
 #write_csv(y, paste0('output/', folder, '/test.csv'))
-f_table_output <- function (preds){
+f_table_output <- function (preds){ # total raw count compared to fitted count 
   
   preds %>% 
     group_by(year) %>%
@@ -153,7 +155,7 @@ f_table_output <- function (preds){
     write_csv(., paste0('output/', folder, '/summary_table.csv'))}
 
 
-f_plot_output <- function (preds){
+f_plot_output <- function (preds){ # fitted cumulative sum versus raw and diff ny year
   
 max = max(preds$fit_cumsum) 
 
@@ -170,10 +172,12 @@ max = max(preds$fit_cumsum)
     as.data.frame() %>% 
     ggplot() +
     geom_line(aes(x = year, y = count, group = value, lty = value, color = value)) +
+    scale_colour_manual(values = c("grey80", "black")) +
     scale_x_continuous(limits = c(min(tickryr$year), max(tickryr$year)),
                        breaks = axisf$breaks, labels = axisf$labels) +
     scale_y_continuous(limits = c(0, max * 1.1),
                        labels = scales::comma) +
+    geom_text(aes(x = 1975, y = 150000, label="A)"),family="Times New Roman", colour="black", size=4) +
     theme(legend.position = c(0.2, 0.85), legend.title = element_blank (),
           legend.text=element_text(size=12)) +
     xlab('\nYear') +
@@ -195,6 +199,7 @@ plot1
     theme(legend.position = c(0.15, 0.85)) +
     theme ( legend.title = element_blank ()) +
     xlab('\nYear') +
+    geom_text(aes(x = 1975, y = 11500, label="B)"),family="Times New Roman", colour="black", size=4) +
     ylab('Difference\n') -> plot2
   plot2
   cowplot::plot_grid(plot1, plot2,  align = "v", nrow = 2, ncol=1) 
@@ -203,20 +208,22 @@ plot1
 
 
 f_run_through <- function(preds, perc = 0.95, prob = 0.95){ #change perc to 0.90 for alt run
-  
+
   preds %>% 
     group_by(year) %>%
     filter(fit_cumsum <= perc * max(fit_cumsum)) %>%
     summarise(run_95 = max(julian)) %>% 
     ungroup %>%
-    summarise(end_date = quantile(run_95, prob)) %>% 
+    filter(year>max(year)-9)%>% # only use the last 10 years of data
+    #summarise(end_date = quantile(run_95, prob)) %>% # this could be changed to average or average of last 10 years
+    summarise(end_date = round(mean(run_95),0)) %>%
     ungroup() %>%
     as.data.frame() %>%
     mutate(date = as.Date(strptime(paste(year(Sys.Date()), end_date, sep='-'), "%Y-%j"))) %T>% 
     write_csv(., paste0('output/', folder, '/run_through.csv'))
   
 }
-write_csv(y, paste0('output/', folder, '/test5.csv'))
+#write_csv(y, paste0('output/', folder, '/test5.csv'))
 f_pred_plot <- function(preds, run_through, perc = 0.95){ #change perc to 0.90 for alt run
   run_through = run_through$end_date
   
@@ -382,59 +389,107 @@ f_remove_dates <- function(preds, run_through){
   # removal date based upon 1% rules
   run_through = run_through$end_date
   yrs = expand.grid(year = unique(preds$year),
-               days = c('one', 'two', 'three', 'four', 'five')) 
-    
+                    days = c('one', 'two', 'three', 'four', 'five')) 
+  
   preds %>%
     dplyr::select(year, julian, fit_run, fit_cumsum) %>% 
     group_by(year) %>% 
-    mutate(one_4 = ifelse((lag(fit_run, 4) / fit_cumsum) >= 0.01, 1, 0),
-           one_3 = ifelse(lag(fit_run, 3) / fit_cumsum >=  0.01, 1, 0),
-           one_2 = ifelse(lag(fit_run, 2) / fit_cumsum >=  0.01, 1, 0),
-           one_1 = ifelse(lag(fit_run) / fit_cumsum >=  0.01, 1, 0),
-           one = ifelse(fit_run / fit_cumsum >=  0.01, 1, 0),  
-           five = ifelse(one_4==1 | one_3==1 | one_2==1 | one_1==1 | one==1, 1, 0),
-           four = ifelse(one_3==1 | one_2==1 | one_1==1 | one==1, 1, 0),
-           three = ifelse(one_2==1 | one_1==1 | one==1, 1, 0),
-           two = ifelse(one_1==1 | one==1, 1, 0)) %>% 
+    mutate(one_5 = (lag(fit_run, 5) / (lag(fit_cumsum,6))),
+           one_4 = (lag(fit_run, 4) / (lag(fit_cumsum,5))),
+           one_3 = (lag(fit_run, 3) / (lag(fit_cumsum,4))),
+           one_2 = (lag(fit_run, 2) / (lag(fit_cumsum,3))),
+           one_1 =   (lag(fit_run,1) / (lag(fit_cumsum,2)))) %>% 
+    mutate(one_5_rule = ifelse((lag(fit_run, 5) / (lag(fit_cumsum,6)))<0.01,1,0), # if <1%, then give it a 1
+           one_4_rule = ifelse((lag(fit_run, 4) / (lag(fit_cumsum,5)))<0.01,1,0),
+           one_3_rule = ifelse((lag(fit_run, 3) / (lag(fit_cumsum,4)))<0.01,1,0),
+           one_2_rule = ifelse((lag(fit_run, 2) / (lag(fit_cumsum,3)))<0.01,1,0),
+           one_1_rule =  ifelse((lag(fit_run,1) / (lag(fit_cumsum,2)))<0.01,1,0)) %>% 
+    filter((julian)>((round(run_through,0))+5)) %>% 
+    mutate(five = ifelse(one_5_rule==1 & one_4_rule==1 & one_3_rule==1 & one_2_rule==1 & one_1_rule==1, 1,0),# determine JD of 5 days with <1%
+           four = ifelse(one_4_rule==1 & one_3_rule==1 & one_2_rule==1 & one_1_rule==1, 1,0),
+           three = ifelse(one_3_rule==1 & one_2_rule==1 & one_1_rule==1, 1,0),
+           two = ifelse(one_2_rule==1 & one_1_rule==1, 1,0),
+           one = ifelse(one_1_rule==1, 1,0)) %>% # if all < 1%, then give it a 1
     dplyr::select(year, julian, five, four, three, two, one) %>% 
     gather(days, value, -year, -julian) %>%  
     filter(julian >= run_through, value==1) %>% 
     left_join(yrs, .) %>% 
     mutate(julian = ifelse(is.na(julian) | julian < run_through, run_through, julian)) %>% 
     group_by(year, days) %>% 
-    summarise(max = max(julian))->x
+    summarise(max = min(julian))
   
-} 
-
-f_remove_dates_05 <- function(preds, run_through){
-  # removal date based upon 0.05% rules
+}
+f_remove_dates_table <- function(preds, run_through){
+  # removal date based upon 1% rules
   run_through = run_through$end_date
-  
   yrs = expand.grid(year = unique(preds$year),
                     days = c('one', 'two', 'three', 'four', 'five')) 
-
+  
   preds %>%
     dplyr::select(year, julian, fit_run, fit_cumsum) %>% 
     group_by(year) %>% 
-    mutate(one_4 = ifelse((lag(fit_run, 4) / fit_cumsum) >= 0.005, 1, 0),
-           one_3 = ifelse(lag(fit_run, 3) / fit_cumsum >=  0.005, 1, 0),
-           one_2 = ifelse(lag(fit_run, 2) / fit_cumsum >=  0.005, 1, 0),
-           one_1 = ifelse(lag(fit_run) / fit_cumsum >=  0.005, 1, 0),
-           one = ifelse(fit_run / fit_cumsum >=  0.005, 1, 0),  
-           five = ifelse(one_4==1 | one_3==1 | one_2==1 | one_1==1 | one==1, 1, 0),
-           four = ifelse(one_3==1 | one_2==1 | one_1==1 | one==1, 1, 0),
-           three = ifelse(one_2==1 | one_1==1 | one==1, 1, 0),
-           two = ifelse(one_1==1 | one==1, 1, 0)) %>% 
+    mutate(one_5 = (lag(fit_run, 5) / (lag(fit_cumsum,6))),
+           one_4 = (lag(fit_run, 4) / (lag(fit_cumsum,5))),
+           one_3 = (lag(fit_run, 3) / (lag(fit_cumsum,4))),
+           one_2 = (lag(fit_run, 2) / (lag(fit_cumsum,3))),
+           one_1 =   (lag(fit_run,1) / (lag(fit_cumsum,2)))) %>% 
+    mutate(one_5_rule = ifelse((lag(fit_run, 5) / (lag(fit_cumsum,6)))<0.01,1,0), # if <1%, then give it a 1
+           one_4_rule = ifelse((lag(fit_run, 4) / (lag(fit_cumsum,5)))<0.01,1,0),
+           one_3_rule = ifelse((lag(fit_run, 3) / (lag(fit_cumsum,4)))<0.01,1,0),
+           one_2_rule = ifelse((lag(fit_run, 2) / (lag(fit_cumsum,3)))<0.01,1,0),
+           one_1_rule =  ifelse((lag(fit_run,1) / (lag(fit_cumsum,2)))<0.01,1,0)) %>% 
+    filter((julian)>((round(run_through,0))+5)) %>% 
+    mutate(five = ifelse(one_5_rule==1 & one_4_rule==1 & one_3_rule==1 & one_2_rule==1 & one_1_rule==1, 1,0),# determine JD of 5 days with <1%
+           four = ifelse(one_4_rule==1 & one_3_rule==1 & one_2_rule==1 & one_1_rule==1, 1,0),
+           three = ifelse(one_3_rule==1 & one_2_rule==1 & one_1_rule==1, 1,0),
+           two = ifelse(one_2_rule==1 & one_1_rule==1, 1,0),
+           one = ifelse(one_1_rule==1, 1,0)) %>% # if all < 1%, then give it a 1
     dplyr::select(year, julian, five, four, three, two, one) %>% 
     gather(days, value, -year, -julian) %>%  
     filter(julian >= run_through, value==1) %>% 
     left_join(yrs, .) %>% 
     mutate(julian = ifelse(is.na(julian) | julian < run_through, run_through, julian)) %>% 
     group_by(year, days) %>% 
-    summarise(max = max(julian))
+    summarise(max = min(julian)) %>% 
+    write_csv(., paste0('output/', folder, '/remove_dates_table.csv'))
   
-} 
-
+}
+# f_remove_dates_05 <- function(preds, run_through){
+#   # removal date based upon 0.05% rules
+#   run_through = run_through$end_date
+#   
+#   yrs = expand.grid(year = unique(preds$year),
+#                     days = c('one', 'two', 'three', 'four', 'five')) 
+# 
+#   preds %>%
+#     dplyr::select(year, julian, fit_run, fit_cumsum) %>% 
+#     group_by(year) %>% 
+#     mutate(one_5 = (lag(fit_run, 5) / (lag(fit_cumsum,6))),
+#            one_4 = (lag(fit_run, 4) / (lag(fit_cumsum,5))),
+#            one_3 = (lag(fit_run, 3) / (lag(fit_cumsum,4))),
+#            one_2 = (lag(fit_run, 2) / (lag(fit_cumsum,3))),
+#            one_1 =   (lag(fit_run,1) / (lag(fit_cumsum,2)))) %>% 
+#     mutate(one_5_rule = ifelse((lag(fit_run, 5) / (lag(fit_cumsum,6)))<0.005,1,0), # if <0.05%, then give it a 1
+#            one_4_rule = ifelse((lag(fit_run, 4) / (lag(fit_cumsum,5)))<0.005,1,0),
+#            one_3_rule = ifelse((lag(fit_run, 3) / (lag(fit_cumsum,4)))<0.005,1,0),
+#            one_2_rule = ifelse((lag(fit_run, 2) / (lag(fit_cumsum,3)))<0.005,1,0),
+#            one_1_rule =  ifelse((lag(fit_run,1) / (lag(fit_cumsum,2)))<0.005,1,0)) %>% 
+#     filter((julian)>((round(run_through,0))+5)) %>% 
+#     mutate(five = ifelse(one_5_rule==1 & one_4_rule==1 & one_3_rule==1 & one_2_rule==1 & one_1_rule==1, 1,0),# determine JD of 5 days with <1%
+#            four = ifelse(one_4_rule==1 & one_3_rule==1 & one_2_rule==1 & one_1_rule==1, 1,0),
+#            three = ifelse(one_3_rule==1 & one_2_rule==1 & one_1_rule==1, 1,0),
+#            two = ifelse(one_2_rule==1 & one_1_rule==1, 1,0),
+#            one = ifelse(one_1_rule==1, 1,0)) %>% # if all < 0.05%, then give it a 1
+#     dplyr::select(year, julian, five, four, three, two, one) %>% 
+#     gather(days, value, -year, -julian) %>%  
+#     filter(julian >= run_through, value==1) %>% 
+#     left_join(yrs, .) %>% 
+#     mutate(julian = ifelse(is.na(julian) | julian < run_through, run_through, julian)) %>% 
+#     group_by(year, days) %>% 
+#     summarise(min = min(julian))
+# 
+# } 
+# need to work on this function and next
 f_run_caught <- function(preds, remove_dates){
   
   y = deparse(substitute(remove_dates))
@@ -448,6 +503,7 @@ f_run_caught <- function(preds, remove_dates){
     group_by(days, year) %>% 
     summarise(diff = (1 - (sum(fit_run) / mean(max_cumsum)))) %>% 
     group_by(days) %>% 
+    write_csv(., paste0('output/', folder, '/percent_missed.csv'))%>% 
     summarise('99' = round(100 * (1 - quantile(diff, .99)), 1),
               '95' = round(100 * (1 - quantile(diff, .95)), 1),
               '90' = round(100 * (1 - quantile(diff, .90)), 1),
@@ -467,7 +523,7 @@ f_run_caught <- function(preds, remove_dates){
 }
 
 f_risk_plot <- function(preds, remove_dates){
-  
+
   y = deparse(substitute(remove_dates))
   z = ifelse(y =='remove_dates', '1% rule', '0.05% rule')
     
@@ -489,8 +545,9 @@ f_risk_plot <- function(preds, remove_dates){
     mutate(days = factor(days, levels = c('one', 'two', 'three', 'four', 'five')),
                   position = rep(1:7, each = length(unique(days)))) %>% 
     mutate(risk = rep(c(1, 5, 10, 20, 30, 40, 50), each = 5))%>% 
-    ggplot(aes(risk, Percent, color = days)) +
+    ggplot(aes(risk, Percent, color = days, linetype = days)) +
     geom_line() +
+    scale_color_brewer(palette = "Dark2") +
     xlab('% Risk') +
     ylab('% of missed run') +
     expand_limits(y = 0) +
@@ -502,48 +559,48 @@ f_risk_plot <- function(preds, remove_dates){
 }
 
 
-f_run_risk <- function(preds, remove_dates){
-  
-  y = deparse(substitute(remove_dates))
-  
-  # note: have to round "bins" due to 0.10 floating issue
-  # see all computer programs for an example...
-  expand.grid(days = c('five', 'four', 'three', 'two', 'one'),
-              bins = round(seq(0.01, 0.5, 0.01), 2)) -> x
-  
-  preds %>% 
-    left_join(remove_dates) %>% 
-    group_by(days, year) %>% 
-    mutate(mm = max(fit_cumsum)) %>% 
-    filter(julian <= max) %>% 
-    summarise(perc_missed = mean(1 - (sum(fit_run) / mean(mm)))) %>% 
-      mutate(perc_missed = ifelse(perc_missed<=0, 0.00001, perc_missed)) %>% # adjust for values<0
-    group_by(., days) %>% 
-      summarise(perc_missed = perc_missed %>% list) %>% 
-      mutate(.,mod = map(perc_missed, ~fitdistr(.x, 'gamma'))) %>% 
-      mutate(., mod = map(mod, tidy)) %>%
-      unnest(mod) %>% 
-      dplyr::select(-std.error) %>% 
-      spread(term, estimate) %>% 
-      left_join(x)%>% 
-      mutate(gamma = 1 - pgamma(bins, shape, rate)) %>% 
-      filter(bins %in% c(0.01, 0.05, 0.10, 0.20, 0.30, 0.40, 0.50)) %>% 
-      dplyr::select(-rate, -shape) %>% 
-      mutate(bins = case_when(bins == 0.01 ~ '1% run missed',
-                              bins == 0.05 ~ '5% run missed',
-                              bins == 0.10 ~ '10% run missed',
-                              bins == 0.20 ~ '20% run missed',
-                              bins == 0.30 ~ '30% run missed',
-                              bins == 0.40 ~ '40% run missed',
-                              bins == 0.50 ~ '50% run missed'),
-             bins = factor(bins, levels = unique(bins)),
-             gamma = round(gamma, 3) * 100,
-             days = factor(days, levels = c('one', 'two', 'three', 'four', 'five'))) %>%
-    dplyr::select(-perc_missed) %>%
-      spread(days, gamma) %T>% 
-      write_csv(., paste0('output/', folder,'/', y, '_run_risk.csv'))
-}
-
+# f_run_risk <- function(preds, remove_dates){
+#   
+#   y = deparse(substitute(remove_dates))
+#   
+#   # note: have to round "bins" due to 0.10 floating issue
+#   # see all computer programs for an example...
+#   expand.grid(days = c('five', 'four', 'three', 'two', 'one'),
+#               bins = round(seq(0.01, 0.5, 0.01), 2)) -> x
+#   
+#   preds %>% 
+#     left_join(remove_dates) %>% 
+#     group_by(days, year) %>% 
+#     mutate(mm = max(fit_cumsum)) %>% 
+#     filter(julian <= max) %>% 
+#     summarise(perc_missed = mean(1 - (sum(fit_run) / mean(mm)))) %>% 
+#       mutate(perc_missed = ifelse(perc_missed<=0, 0.00001, perc_missed)) %>% # adjust for values<0
+#     group_by(., days) %>% 
+#       summarise(perc_missed = perc_missed %>% list) %>% 
+#       mutate(.,mod = map(perc_missed, ~fitdistr(.x, 'gamma'))) %>% 
+#       mutate(., mod = map(mod, tidy)) %>%
+#       unnest(mod) %>% 
+#       dplyr::select(-std.error) %>% 
+#       spread(term, estimate) %>% 
+#       left_join(x)%>% 
+#       mutate(gamma = 1 - pgamma(bins, shape, rate)) %>% 
+#       filter(bins %in% c(0.01, 0.05, 0.10, 0.20, 0.30, 0.40, 0.50)) %>% 
+#       dplyr::select(-rate, -shape) %>% 
+#       mutate(bins = case_when(bins == 0.01 ~ '1% run missed',
+#                               bins == 0.05 ~ '5% run missed',
+#                               bins == 0.10 ~ '10% run missed',
+#                               bins == 0.20 ~ '20% run missed',
+#                               bins == 0.30 ~ '30% run missed',
+#                               bins == 0.40 ~ '40% run missed',
+#                               bins == 0.50 ~ '50% run missed'),
+#              bins = factor(bins, levels = unique(bins)),
+#              gamma = round(gamma, 3) * 100,
+#              days = factor(days, levels = c('one', 'two', 'three', 'four', 'five'))) %>%
+#     dplyr::select(-perc_missed) %>%
+#       spread(days, gamma) %T>% 
+#       write_csv(., paste0('output/', folder,'/', y, '_run_risk.csv'))
+# }
+# 
 # f_run_risk_plot <- function(preds, remove_dates){
 #   
 #   y = deparse(substitute(remove_dates))

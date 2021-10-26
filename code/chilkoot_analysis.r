@@ -6,13 +6,13 @@
 # last updated by SEM: October 15, 2021
 # Notes:
 # 1. calculate end date of weir deployment
-# 2. model tails of the runs, by year - Gompertz model
+# 2. model tails of the runs, by year - Gompertz or logistic model
 # 3. estimate the date required to operate through so that 95% of the escapement on average is observed
 # 4. weir 1% rule - based upon 5,4, 3, or 2 days meeting the 1% requirement
 
 # load ----
 source('code/helper.r')
-source('code/functions.r')
+source('code/functions_Chilkoot.r')
 
 # globals ----
 folder <- 'chilkoot'
@@ -30,7 +30,7 @@ read_csv('data/chilkoot_weir_1976-2021.csv') %>%
 # format data
 f_clean_data(chilkoot) -> df
 
-# model
+# model gompertz function
 f_gomp_model(df) -> model
 saveRDS(model, paste0('output/', folder, '/model.rda'))
 readRDS(paste0('output/', folder, '/model.rda')) -> model
@@ -60,46 +60,47 @@ f_param_plot(params)
 # predict the model on a complete dataset
 f_preds(df, model_logistic) -> preds
 
-# table of data cumsum and fit_cumsum
+# table of data cumsum (raw data) and fit_cumsum
 f_table_output(preds)
 
-# plot of data cumsum and fit_cumsum
+# plot of data cumsum (raw data) and fit_cumsum
 tickryr <- data.frame(year = 1975:2025)
 axisf <- tickr(tickryr, year, 5)
 f_plot_output(preds)
 
 # what is the minimum day that the weir should be in place?
 # the Julian date that 95% of the modeled run has been observed - on average
-f_run_through(preds) -> run_through
+f_run_through(preds) -> run_through # (can be 95% probability or an average, all data or last 10 years)
 
-# plots of fits
+# plots of predicted data and fits (plot for each year)
 f_pred1990_plot(preds, run_through)
 f_pred1991_plot(preds, run_through)
 f_pred2001_plot(preds, run_through)
 
-# plot the predicted data
+# plot the predicted data and fits
 f_pred_plot(preds, run_through)
 
-# plot the predicted data
+# plot the predicted data and fits by decade
 f_pred_plot_decade(preds, run_through)
 
 # dates the weirs would be removed based upon 1% and 0.05% rule
 # for 5,4,3, or 2 days
 f_remove_dates(preds, run_through) -> remove_dates 
-f_remove_dates_05(preds, run_through) -> remove_dates_05 
+f_remove_dates_table(preds, run_through)
+# f_remove_dates_05(preds, run_through) -> remove_dates_05 
 
 # Percent of the run that is caught at a given risk level
 f_run_caught(preds, remove_dates)
-f_run_caught(preds, remove_dates_05)
+# f_run_caught(preds, remove_dates_05)
 
 # plot of missed run and risk
 f_risk_plot(preds, remove_dates)
-f_risk_plot(preds, remove_dates_05)
+# f_risk_plot(preds, remove_dates_05)
 
 # Percent of risk at a given % of missed run
-f_run_risk(preds, remove_dates)
-f_run_risk(preds, remove_dates_05)
+# f_run_risk(preds, remove_dates)
+# f_run_risk(preds, remove_dates_05)
 
 # Median, 25% and 75% quantiles of weir end date
 f_median_end_date(remove_dates)
-f_median_end_date(remove_dates_05)
+# f_median_end_date(remove_dates_05)
