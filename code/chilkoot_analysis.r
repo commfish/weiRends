@@ -24,7 +24,7 @@ folder <- 'chilkoot'
 read_csv('data/chilkoot_weir_1976-2021.csv') %>% 
   filter(species=='Sockeye') %>% 
   dplyr::select(date, count) -> chilkoot
-
+year_num <-2012 # years to include in run_through
 # run functions ----
 
 # format data
@@ -58,49 +58,39 @@ f_params(model_logistic) -> params # choose model based on deviance
 f_param_plot(params)
 
 # predict the model on a complete dataset
-f_preds(df, model_logistic) -> preds
+f_preds(df, model_logistic) -> preds #preds.csv
 
 # table of data cumsum (raw data) and fit_cumsum
-f_table_output(preds)
+f_table_output(preds) # total count of raw versus fitted; summary_table.csv
 
 # plot of data cumsum (raw data) and fit_cumsum
 tickryr <- data.frame(year = 1975:2025)
 axisf <- tickr(tickryr, year, 5)
-f_plot_output(preds)
+f_plot_output(preds) # fitted_plot.png
 
 # what is the minimum day that the weir should be in place?
-# the Julian date that 95% of the modeled run has been observed - on average
-f_run_through(preds) -> run_through # (can be 95% probability or an average, all data or last 10 years)
+# the 95th percentile of the Julian date that 95% of the modeled run has been observed in the last 10 years only - 
+f_run_through(preds) -> run_through # run_through.csv file
 
-# plots of predicted data and fits (plot for each year)
-f_pred1990_plot(preds, run_through)
-f_pred1991_plot(preds, run_through)
-f_pred2001_plot(preds, run_through)
+# plot the predicted data and fits 
+f_run95(preds, run_through) # outputs the 95% cumsum by year as a Julian date; run_95.csv
+f_pred_plot(preds, run_through) # pred_plot.png
+f_pred1990_plot(preds, run_through) # pred_plot1990.png
+f_pred1991_plot(preds, run_through) # pred_plot1991.png
+f_pred2001_plot(preds, run_through) # pred_plot2001.png
 
-# plot the predicted data and fits
-f_pred_plot(preds, run_through)
-
-# plot the predicted data and fits by decade
-f_pred_plot_decade(preds, run_through)
-
-# dates the weirs would be removed based upon 1% and 0.05% rule
+# dates the weirs would be removed based upon 1%  rule
 # for 5,4,3, or 2 days
 f_remove_dates(preds, run_through) -> remove_dates 
-f_remove_dates_table(preds, run_through)
-# f_remove_dates_05(preds, run_through) -> remove_dates_05 
+f_remove_dates_table(preds, run_through) # remove_dates_table.csv
 
-# Percent of the run that is caught at a given risk level
-f_run_caught(preds, remove_dates)
-# f_run_caught(preds, remove_dates_05)
+# percent of the run that is caught at a given risk level
+f_percent_missed (preds, remove_dates) # percent_missed.csv
+f_run_caught(preds, remove_dates) # remove_dates_run_caught.csv
 
 # plot of missed run and risk
-f_risk_plot(preds, remove_dates)
-# f_risk_plot(preds, remove_dates_05)
+f_risk_plot(preds, remove_dates) # remove_dates_risk_plot.png
 
-# Percent of risk at a given % of missed run
-# f_run_risk(preds, remove_dates)
-# f_run_risk(preds, remove_dates_05)
-
-# Median, 25% and 75% quantiles of weir end date
+# median, 25% and 75% quantiles of weir end date
 f_median_end_date(remove_dates)
-# f_median_end_date(remove_dates_05)
+

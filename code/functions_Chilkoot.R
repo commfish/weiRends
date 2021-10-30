@@ -145,7 +145,7 @@ f_preds <- function(data, model){
     write_csv(paste0('output/', folder, '/preds.csv'))
   
 }
-#write_csv(y, paste0('output/', folder, '/test.csv'))
+
 f_table_output <- function (preds){ # total raw count compared to fitted count 
   
   preds %>% 
@@ -211,28 +211,38 @@ f_run_through <- function(preds, perc = 0.95, prob = 0.95){ #change perc to 0.90
 
   preds %>% 
     group_by(year) %>%
-    filter(fit_cumsum <= perc * max(fit_cumsum)) %>%
+    filter(year>=year_num) %>% # only use the last 10 years of data
+    filter(fit_cumsum <= perc * max(fit_cumsum)) %>% # 95th percentile of last 10 years
     summarise(run_95 = max(julian)) %>% 
     ungroup %>%
-    filter(year>max(year)-9)%>% # only use the last 10 years of data
-    #summarise(end_date = quantile(run_95, prob)) %>% # this could be changed to average or average of last 10 years
-    summarise(end_date = round(mean(run_95),0)) %>%
+    summarise(end_date = round(quantile(run_95, prob),0)) %>% 
     ungroup() %>%
     as.data.frame() %>%
     mutate(date = as.Date(strptime(paste(year(Sys.Date()), end_date, sep='-'), "%Y-%j"))) %T>% 
     write_csv(., paste0('output/', folder, '/run_through.csv'))
   
 }
-#write_csv(y, paste0('output/', folder, '/test5.csv'))
-f_pred_plot <- function(preds, run_through, perc = 0.95){ #change perc to 0.90 for alt run
+
+f_run95 <- function(preds, run_through, perc = 0.95){ #change perc to 0.90 for alt run
   run_through = run_through$end_date
   
   preds %>%
     group_by(., year) %>%
     filter(fit_cumsum <= perc * max(fit_cumsum)) %>%
-    summarise(run_95 = max(julian)) -> x
+    summarise(run_95 = max(julian)) %>%
+  write_csv(., paste0('output/', folder, '/run_95.csv'))
+}
 
+f_pred_plot <- function(preds, run_through, perc = 0.95){ #change perc to 0.90 for alt run
+  run_through = run_through$end_date
+  
+  preds %>%
+    filter(year>=year_num)%>%
+    group_by(., year) %>%
+    filter(fit_cumsum <= perc * max(fit_cumsum)) %>%
+    summarise(run_95 = max(julian)) -> x
   preds %>% 
+    filter(year>=year_num)%>%
     group_by(., year) %>%
     left_join(x, .) %>% 
     mutate(julian95 = ifelse(julian == run_95, fit_cumsum, NA),
@@ -241,7 +251,8 @@ f_pred_plot <- function(preds, run_through, perc = 0.95){ #change perc to 0.90 f
     geom_line(aes(alpha = alpha)) +
     geom_point(aes(y = cumsum), alpha = 0.15) +
     geom_point(aes(y = julian95, fill=Year), alpha = 0.90, pch = 21) +
-    scale_y_continuous(labels = comma) +
+    scale_y_continuous(limits = c(0, max * 1.1),
+                       labels = scales::comma) +
     geom_vline(xintercept=run_through, lty = 3) +
     scale_alpha(guide = 'none') +
     xlab('\nJulian date') +
@@ -251,23 +262,24 @@ f_pred_plot <- function(preds, run_through, perc = 0.95){ #change perc to 0.90 f
          height = 5, width = 6.5, units = "in") 
   
   x
+  
 }
 
 f_pred1990_plot <- function(preds, run_through, perc = 0.95){ #change perc to 0.90 for alt run
   run_through = run_through$end_date
-  
+
   preds %>%
     group_by(., year) %>%
     filter(fit_cumsum <= perc * max(fit_cumsum)) %>%
     summarise(run_95 = max(julian)) -> x
-  
-  preds %>% 
+
+  preds %>%
     group_by(.,year) %>%
-    left_join(x, .) %>% 
+    left_join(x, .) %>%
     mutate(julian95 = ifelse(julian == run_95, fit_cumsum, NA),
            alpha = ifelse(julian>run_95, .6, .7),
-           decade = year - year %% 1) %>% 
-    filter (year < 1991) %>% 
+           decade = year - year %% 1) %>%
+    filter (year < 1991) %>%
     ggplot(aes(julian, fit_cumsum , group = Year)) +
     geom_line(aes(alpha = alpha)) +
     geom_point(aes(y = cumsum ), alpha = 0.1) +
@@ -275,66 +287,66 @@ f_pred1990_plot <- function(preds, run_through, perc = 0.95){ #change perc to 0.
     scale_y_continuous(labels = comma) +
     scale_alpha(guide = 'none') +
     geom_vline(xintercept=run_through, lty = 3) +
-    scale_fill_discrete(guide = 'none') + 
+    scale_fill_discrete(guide = 'none') +
     theme(legend.position="none") +
     xlab('\nJulian date') +
     ylab('Cumulative Escapement\n') +
     facet_wrap(~decade, dir = 'v') -> x
   print(x)
-  
-  ggsave(paste0('figs/', folder, "/pred_plot_1990year.png"), plot = x, dpi = 100, 
-         height = 10, width = 8.5, units = "in") 
+
+  ggsave(paste0('figs/', folder, "/pred_plot_1990year.png"), plot = x, dpi = 100,
+         height = 10, width = 8.5, units = "in")
 }
 
-f_pred1991_plot <- function(preds, run_through){ 
+f_pred1991_plot <- function(preds, run_through){
   run_through = run_through$end_date
-  
+
   preds %>%
     group_by(., year) %>%
     filter(fit_cumsum <= perc * max(fit_cumsum)) %>%
     summarise(run_95 = max(julian)) -> x
-  
-  preds %>% 
+
+  preds %>%
     group_by(.,year) %>%
-    left_join(x, .) %>% 
+    left_join(x, .) %>%
     mutate(julian95 = ifelse(julian == run_95, fit_cumsum, NA),
            alpha = ifelse(julian>run_95, 0.6, .7),
-           decade = year - year %% 1) %>% 
-    filter (year > 1990) %>% 
-    filter (year < 2002) %>% 
+           decade = year - year %% 1) %>%
+    filter (year > 1990) %>%
+    filter (year < 2002) %>%
     ggplot(aes(julian, fit_cumsum , group = Year)) +
     geom_line(aes(alpha = alpha)) +
     geom_point(aes(y = cumsum ), alpha = 0.1) +
     geom_point(aes(y = julian95 , fill=Year), alpha = 0.80, pch = 21, size =2) +
     scale_y_continuous(labels = comma) +
     scale_alpha(guide = 'none') +
-    scale_fill_discrete(guide = 'none') + 
+    scale_fill_discrete(guide = 'none') +
     geom_vline(xintercept=run_through, lty = 3) +
     theme(legend.position="none") +
     xlab('\nJulian date') +
     ylab('Cumulative Escapement\n') +
     facet_wrap(~decade, dir = 'v') -> x
   print(x)
-  
-  ggsave(paste0('figs/', folder, "/pred_plot_1991year.png"), plot = x, dpi = 100, 
-         height = 10, width = 8.5, units = "in") 
+
+  ggsave(paste0('figs/', folder, "/pred_plot_1991year.png"), plot = x, dpi = 100,
+         height = 10, width = 8.5, units = "in")
 }
 
 f_pred2001_plot <- function(preds, run_through){ #change perc to 0.90 for alt run
   run_through = run_through$end_date
-  
+
   preds %>%
     group_by(., year) %>%
     filter(fit_cumsum <= perc * max(fit_cumsum)) %>%
     summarise(run_95 = max(julian)) -> x
-  
-  preds %>% 
+
+  preds %>%
     group_by(.,year) %>%
-    left_join(x, .) %>% 
+    left_join(x, .) %>%
     mutate(julian95 = ifelse(julian == run_95, fit_cumsum, NA),
            alpha = ifelse(julian>run_95, 0.6, .7),
-           decade = year - year %% 1) %>% 
-    filter (year > 2001) %>% 
+           decade = year - year %% 1) %>%
+    filter (year > 2001) %>%
     ggplot(aes(julian, fit_cumsum , group = Year)) +
     geom_line(aes(alpha = alpha)) +
     geom_point(aes(y = cumsum ), alpha = 0.1) +
@@ -342,58 +354,61 @@ f_pred2001_plot <- function(preds, run_through){ #change perc to 0.90 for alt ru
     scale_y_continuous(labels = comma) +
     geom_vline(xintercept=run_through, lty = 3) +
     scale_alpha(guide = 'none') +
-    scale_fill_discrete(guide = 'none') + 
+    scale_fill_discrete(guide = 'none') +
     theme(legend.position="none") +
     xlab('\nJulian date') +
     ylab('Cumulative Escapement\n') +
     facet_wrap(~decade, dir = 'v') -> x
   print(x)
-  
-  ggsave(paste0('figs/', folder, "/pred_plot_2001year.png"), plot = x, dpi = 100, 
-         height = 10, width = 8.5, units = "in") 
+
+  ggsave(paste0('figs/', folder, "/pred_plot_2001year.png"), plot = x, dpi = 100,
+         height = 10, width = 8.5, units = "in")
 }
 
 
-f_pred_plot_decade <- function(preds, run_through){
-  run_through = run_through$end_date
-  
-  preds %>%
-    group_by(., year) %>%
-    filter(fit_cumsum <= perc * max(fit_cumsum)) %>%
-    summarise(run_95 = max(julian)) -> x
+# f_pred_plot_decade <- function(preds, run_through){
+#   run_through = run_through$end_date
+# 
+#   preds %>%
+#     group_by(., year) %>%
+#     filter(fit_cumsum <= perc * max(fit_cumsum)) %>%
+#     summarise(run_95 = max(julian)) -> x
+# 
+#   preds %>%
+#     group_by(.,year) %>%
+#     left_join(x, .) %>%
+#     mutate(julian95 = ifelse(julian == run_95, fit_cumsum, NA),
+#            alpha = ifelse(julian>run_95, 0.3, .8),
+#            decade = year - year %% 10) %>%
+#     ggplot(aes(julian, fit_cumsum , group = Year)) +
+#     geom_line(aes(alpha = alpha)) +
+#     geom_point(aes(y = cumsum ), alpha = 0.05) +
+#     geom_point(aes(y = julian95 , fill=Year), alpha = 0.90, pch = 21) +
+#     scale_y_continuous(labels = comma) +
+#     geom_vline(xintercept=run_through, lty = 3) +
+#     scale_alpha(guide = 'none') +
+#     scale_fill_discrete(guide = 'none') +
+#     xlab('\nJulian date') +
+#     ylab('Cumulative Escapement\n') +
+#     facet_wrap(~decade, dir = 'v') -> x
+#   print(x)
+# 
+#   ggsave(paste0('figs/', folder, "/pred_plot_decade.png"), plot = x, dpi = 100,
+#          height = 5, width = 6.5, units = "in")
+# }
 
-  preds %>% 
-    group_by(.,year) %>%
-    left_join(x, .) %>% 
-    mutate(julian95 = ifelse(julian == run_95, fit_cumsum, NA),
-           alpha = ifelse(julian>run_95, 0.3, .8),
-           decade = year - year %% 10) %>% 
-    ggplot(aes(julian, fit_cumsum , group = Year)) +
-    geom_line(aes(alpha = alpha)) +
-    geom_point(aes(y = cumsum ), alpha = 0.05) +
-    geom_point(aes(y = julian95 , fill=Year), alpha = 0.90, pch = 21) +
-    scale_y_continuous(labels = comma) +
-    geom_vline(xintercept=run_through, lty = 3) +
-    scale_alpha(guide = 'none') +
-    scale_fill_discrete(guide = 'none') + 
-    xlab('\nJulian date') +
-    ylab('Cumulative Escapement\n') +
-    facet_wrap(~decade, dir = 'v') -> x
-  print(x)
-  
-  ggsave(paste0('figs/', folder, "/pred_plot_decade.png"), plot = x, dpi = 100, 
-         height = 5, width = 6.5, units = "in") 
-}
 
 f_remove_dates <- function(preds, run_through){
   # removal date based upon 1% rules
   run_through = run_through$end_date
   yrs = expand.grid(year = unique(preds$year),
-                    days = c('one', 'two', 'three', 'four', 'five')) 
+                    days = c('one', 'two', 'three', 'four', 'five')) %>%
+ filter(year>=year_num)
   
   preds %>%
     dplyr::select(year, julian, fit_run, fit_cumsum) %>% 
     group_by(year) %>% 
+    filter(year>=year_num)%>%
     mutate(one_5 = (lag(fit_run, 5) / (lag(fit_cumsum,6))),
            one_4 = (lag(fit_run, 4) / (lag(fit_cumsum,5))),
            one_3 = (lag(fit_run, 3) / (lag(fit_cumsum,4))),
@@ -403,8 +418,8 @@ f_remove_dates <- function(preds, run_through){
            one_4_rule = ifelse((lag(fit_run, 4) / (lag(fit_cumsum,5)))<0.01,1,0),
            one_3_rule = ifelse((lag(fit_run, 3) / (lag(fit_cumsum,4)))<0.01,1,0),
            one_2_rule = ifelse((lag(fit_run, 2) / (lag(fit_cumsum,3)))<0.01,1,0),
-           one_1_rule =  ifelse((lag(fit_run,1) / (lag(fit_cumsum,2)))<0.01,1,0)) %>% 
-    filter((julian)>((round(run_through,0))+5)) %>% 
+           one_1_rule =  ifelse((lag(fit_run,1) / (lag(fit_cumsum,2)))<0.01,1,0))%>% 
+    filter((julian)>((round(run_through,0)))) %>% 
     mutate(five = ifelse(one_5_rule==1 & one_4_rule==1 & one_3_rule==1 & one_2_rule==1 & one_1_rule==1, 1,0),# determine JD of 5 days with <1%
            four = ifelse(one_4_rule==1 & one_3_rule==1 & one_2_rule==1 & one_1_rule==1, 1,0),
            three = ifelse(one_3_rule==1 & one_2_rule==1 & one_1_rule==1, 1,0),
@@ -423,11 +438,13 @@ f_remove_dates_table <- function(preds, run_through){
   # removal date based upon 1% rules
   run_through = run_through$end_date
   yrs = expand.grid(year = unique(preds$year),
-                    days = c('one', 'two', 'three', 'four', 'five')) 
+                    days = c('one', 'two', 'three', 'four', 'five')) %>%
+    filter(year>=year_num)
   
   preds %>%
     dplyr::select(year, julian, fit_run, fit_cumsum) %>% 
     group_by(year) %>% 
+    filter(year>=year_num)%>%
     mutate(one_5 = (lag(fit_run, 5) / (lag(fit_cumsum,6))),
            one_4 = (lag(fit_run, 4) / (lag(fit_cumsum,5))),
            one_3 = (lag(fit_run, 3) / (lag(fit_cumsum,4))),
@@ -438,7 +455,7 @@ f_remove_dates_table <- function(preds, run_through){
            one_3_rule = ifelse((lag(fit_run, 3) / (lag(fit_cumsum,4)))<0.01,1,0),
            one_2_rule = ifelse((lag(fit_run, 2) / (lag(fit_cumsum,3)))<0.01,1,0),
            one_1_rule =  ifelse((lag(fit_run,1) / (lag(fit_cumsum,2)))<0.01,1,0)) %>% 
-    filter((julian)>((round(run_through,0))+5)) %>% 
+    filter((julian)>((round(run_through,0)))) %>% 
     mutate(five = ifelse(one_5_rule==1 & one_4_rule==1 & one_3_rule==1 & one_2_rule==1 & one_1_rule==1, 1,0),# determine JD of 5 days with <1%
            four = ifelse(one_4_rule==1 & one_3_rule==1 & one_2_rule==1 & one_1_rule==1, 1,0),
            three = ifelse(one_3_rule==1 & one_2_rule==1 & one_1_rule==1, 1,0),
@@ -490,11 +507,12 @@ f_remove_dates_table <- function(preds, run_through){
 # 
 # } 
 # need to work on this function and next
-f_run_caught <- function(preds, remove_dates){
+f_percent_missed <- function(preds, remove_dates){
   
   y = deparse(substitute(remove_dates))
   
   preds %>% 
+    filter(year>=year_num)%>% 
     dplyr::select(julian, year, fit_run, fit_cumsum) %>% 
     left_join(remove_dates) %>% 
     group_by(year) %>% 
@@ -503,7 +521,22 @@ f_run_caught <- function(preds, remove_dates){
     group_by(days, year) %>% 
     summarise(diff = (1 - (sum(fit_run) / mean(max_cumsum)))) %>% 
     group_by(days) %>% 
-    write_csv(., paste0('output/', folder, '/percent_missed.csv'))%>% 
+    write_csv(., paste0('output/', folder, '/percent_missed.csv')) }
+
+f_run_caught <- function(preds, remove_dates){
+  
+  y = deparse(substitute(remove_dates))
+  
+  preds %>% 
+    filter(year>=year_num)%>% 
+    dplyr::select(julian, year, fit_run, fit_cumsum) %>% 
+    left_join(remove_dates) %>% 
+    group_by(year) %>% 
+    mutate(max_cumsum = max(fit_cumsum)) %>% 
+    filter(julian < max) %>% 
+    group_by(days, year) %>% 
+    summarise(diff = (1 - (sum(fit_run) / mean(max_cumsum)))) %>% 
+    group_by(days) %>% 
     summarise('99' = round(100 * (1 - quantile(diff, .99)), 1),
               '95' = round(100 * (1 - quantile(diff, .95)), 1),
               '90' = round(100 * (1 - quantile(diff, .90)), 1),
@@ -528,10 +561,11 @@ f_risk_plot <- function(preds, remove_dates){
   z = ifelse(y =='remove_dates', '1% rule', '0.05% rule')
     
   preds %>% 
+    filter(year>=year_num)%>% 
     left_join(remove_dates) %>% 
     group_by(days, year) %>% 
     mutate(sum_fit = sum(fit_run)) %>% 
-    filter(julian<=max) %>% 
+    filter(julian<max) %>% 
     summarise(diff = mean(1 - (sum(fit_run) / mean(sum_fit)))) %>% 
     group_by(days) %>% 
     summarise('99' = round(100 * (quantile(diff, .99)), 1),
@@ -557,122 +591,6 @@ f_risk_plot <- function(preds, remove_dates){
          height = 5, width = 6.5, units = "in") 
   
 }
-
-
-# f_run_risk <- function(preds, remove_dates){
-#   
-#   y = deparse(substitute(remove_dates))
-#   
-#   # note: have to round "bins" due to 0.10 floating issue
-#   # see all computer programs for an example...
-#   expand.grid(days = c('five', 'four', 'three', 'two', 'one'),
-#               bins = round(seq(0.01, 0.5, 0.01), 2)) -> x
-#   
-#   preds %>% 
-#     left_join(remove_dates) %>% 
-#     group_by(days, year) %>% 
-#     mutate(mm = max(fit_cumsum)) %>% 
-#     filter(julian <= max) %>% 
-#     summarise(perc_missed = mean(1 - (sum(fit_run) / mean(mm)))) %>% 
-#       mutate(perc_missed = ifelse(perc_missed<=0, 0.00001, perc_missed)) %>% # adjust for values<0
-#     group_by(., days) %>% 
-#       summarise(perc_missed = perc_missed %>% list) %>% 
-#       mutate(.,mod = map(perc_missed, ~fitdistr(.x, 'gamma'))) %>% 
-#       mutate(., mod = map(mod, tidy)) %>%
-#       unnest(mod) %>% 
-#       dplyr::select(-std.error) %>% 
-#       spread(term, estimate) %>% 
-#       left_join(x)%>% 
-#       mutate(gamma = 1 - pgamma(bins, shape, rate)) %>% 
-#       filter(bins %in% c(0.01, 0.05, 0.10, 0.20, 0.30, 0.40, 0.50)) %>% 
-#       dplyr::select(-rate, -shape) %>% 
-#       mutate(bins = case_when(bins == 0.01 ~ '1% run missed',
-#                               bins == 0.05 ~ '5% run missed',
-#                               bins == 0.10 ~ '10% run missed',
-#                               bins == 0.20 ~ '20% run missed',
-#                               bins == 0.30 ~ '30% run missed',
-#                               bins == 0.40 ~ '40% run missed',
-#                               bins == 0.50 ~ '50% run missed'),
-#              bins = factor(bins, levels = unique(bins)),
-#              gamma = round(gamma, 3) * 100,
-#              days = factor(days, levels = c('one', 'two', 'three', 'four', 'five'))) %>%
-#     dplyr::select(-perc_missed) %>%
-#       spread(days, gamma) %T>% 
-#       write_csv(., paste0('output/', folder,'/', y, '_run_risk.csv'))
-# }
-# 
-# f_run_risk_plot <- function(preds, remove_dates){
-#   
-#   y = deparse(substitute(remove_dates))
-#   
-#   # note: have to round "bins" due to 0.10 floating issue
-#   # see all computer programs for an example...
-#   expand.grid(days = c('five', 'four', 'three', 'two', 'one'),
-#               bins = round(seq(0.01, 0.5, 0.01), 2)) -> x
-#   
-#   preds %>% 
-#     left_join(remove_dates) %>% 
-#     group_by(days, year) %>% 
-#     mutate(mm = max(fit_cumsum)) %>% 
-#     filter(julian <= max) %>% 
-#     summarise(perc_missed = mean(1 - (sum(fit_run) / mean(mm)))) %>% 
-#     mutate(perc_missed = ifelse(perc_missed<=0, 0.00001, perc_missed)) %>% # adjust for values<0
-#     group_by(., days) %>% 
-#     summarise(perc_missed = perc_missed %>% list) %>% 
-#     mutate(.,mod = map(perc_missed, ~fitdistr(.x, 'gamma'))) %>% 
-#     mutate(., mod = map(mod, tidy)) %>%
-#     unnest(mod) %>% 
-#     dplyr::select(-std.error) %>% 
-#     spread(term, estimate) %>% 
-#     left_join(x) %>% 
-#     group_by(days) %>% 
-#     mutate(gamma = dgamma(bins, shape, rate)) %>% 
-#     mutate(gamma_prop = gamma/sum(gamma)) %>% 
-#     filter(bins %in% c(0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.10, 0.20, 0.30, 0.40, 0.50)) %>% 
-#     dplyr::select(-rate, -shape) %>% 
-#     mutate(bins = factor(bins, levels = unique(bins)),
-#            days = factor(days, levels = c('one', 'two', 'three', 'four', 'five'))) %>%
-#     dplyr::select(-perc_missed) -> gamma_data
-#   
-#   preds %>% 
-#     left_join(remove_dates) %>% 
-#     group_by(days, year) %>% 
-#     mutate(mm = max(fit_cumsum)) %>% 
-#     filter(julian <= max) %>% 
-#     summarise(perc_missed = mean(1 - (sum(fit_run) / mean(mm)))) %>% 
-#     mutate(perc_missed = ifelse(perc_missed<=0, 0.00001, perc_missed)) %>% 
-#     mutate(bins = ifelse(perc_missed >= 0  & perc_missed <= 0.01, 0.01,
-#                          ifelse(perc_missed > 0.01  & perc_missed <= 0.02, 0.02,  
-#                             ifelse(perc_missed > 0.02  & perc_missed <= 0.03, 0.03,
-#                                 ifelse(perc_missed > 0.03  & perc_missed <= 0.04, 0.04,
-#                                     ifelse( perc_missed > 0.04  & perc_missed <= 0.05, 0.05,
-#                                         ifelse(perc_missed > 0.05  & perc_missed <= 0.06, 0.06,
-#                                             ifelse(perc_missed > 0.06  & perc_missed <= 0.07, 0.07,
-#                                                 ifelse(perc_missed > 0.07  & perc_missed <= 0.08, 0.08,
-#                                                     ifelse(perc_missed > 0.08  & perc_missed <= 0.09, 0.09, 
-#                                                       ifelse(perc_missed > 0.09  & perc_missed <= 0.10, 0.10,
-#                                                         ifelse(perc_missed > 0.10  & perc_missed <= 0.20, 0.20,
-#                                                             ifelse(perc_missed > 0.20  & perc_missed <= 0.30, 0.30,
-#                                                                 ifelse(perc_missed > 0.30  & perc_missed <= 0.40, 0.40,0.50)))))))))))))) %>%
-#     group_by(days, bins) %>%
-#     summarise(freq = length(perc_missed)) %>%
-#     merge(., gamma_data, all.y =T) %>%
-#     mutate(freq = ifelse(is.na(freq), 0, freq))%>%
-#     group_by(days)%>%
-#     mutate(prop = prop.table(freq),
-#            gamma_prop = gamma/sum(gamma)) %>%
-#     ungroup() %>%
-#     as.data.frame()%>%
-#       ggplot(.) +
-#       geom_bar(aes(x=bins, y = prop), colour="grey50", stat="identity")  +
-#       geom_line(aes(x = bins, y=gamma_prop),stat="identity", lwd =0.75, group =1)  +
-#       xlab('\nPercent of escapement that is missed') +
-#       ylab('Frequency\n') +
-#       facet_wrap(~days, dir = 'v')->x
-#   print(x)
-#   ggsave(paste0('figs/', folder,'/', y, "_run_risk_plot.png"), plot = x, dpi = 100, 
-#          height = 5, width = 7, units = "in") 
-# }
 
 f_median_end_date <- function(remove_dates, low = .25, high = .75){
   y = deparse(substitute(remove_dates))
