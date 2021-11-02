@@ -600,8 +600,10 @@ f_median_end_date <- function(remove_dates, low = .25, high = .75){
     group_by(days) %>% 
     summarise(median = median(max),
               l_25 = round(quantile(max, low)),
-              u_75 = round(quantile(max, high))) %>% 
-    mutate(date = as.Date(strptime(paste(year(Sys.Date()), median, sep='-'), "%Y-%j"))) %T>% 
+              u_75 = round(quantile(max, high)),
+              max = max(max)) %>% 
+    mutate(date_median = as.Date(strptime(paste(year(Sys.Date()), median, sep='-'), "%Y-%j"))) %T>% 
+    
     write_csv(., paste0('output/', folder,'/', y, '_median_end.csv'))
 
 }
