@@ -2,7 +2,7 @@
 title: "1% Weir Escapement Rule" 
 subtitle: "Chilkoot Lake Sockeye Salmon"
 author: "Sara Miller and Steve Heinl"
-date: "November 1, 2021"
+date: "November 2, 2021"
 output:
   bookdown::pdf_document2:
     fig_caption: yes
@@ -107,7 +107,7 @@ knitr::include_graphics(here("figs/chilkoot/remove_dates_risk_plot.png"))
 ```
 
 # Conclusions
-  1. The hard date, based on the 1% 5-day rule, is Julian day `r tbls_koot$run_through$end_date` or 4 September. 
+  1. The hard date, the date to which the weir must be operated through, is Julian day `r tbls_koot$run_through$end_date` or 4 September. 
   
   3. Based upon the median weir removal date (end date; Julian day 248 or 5 September), using the number of days to implement the 1% rule for the Chilkoot River, there is a 95% chance of capturing 97% of the total escapement for the 5-day rule. 
   
