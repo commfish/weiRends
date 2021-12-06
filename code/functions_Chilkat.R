@@ -9,11 +9,8 @@ f_clean_data <- function(data){
            julian = yday(date), 
            Year = factor(year)) -> df
   
-  #expand.grid(year = min(df$year):max(df$year),
-  #            julian = (min(df$julian)):(max(df$julian))) -> all_days 
-  
   expand.grid(year = min(df$year):max(df$year),
-              julian = (min(df$julian)):(299)) -> all_days 
+              julian = (min(df$julian)):(max(df$julian))) -> all_days 
   
   df %>% 
     group_by(year) %>%
@@ -155,7 +152,7 @@ f_table_output <- function (preds){ # total raw count compared to fitted count
     write_csv(., paste0('output/', folder, '/summary_table.csv'))}
 
 
-f_plot_output <- function (preds){ # fitted cumulative sum versus raw and diff ny year
+f_plot_output <- function (preds){ # fitted cumulative sum versus raw and diff by year
   
 max = max(preds$fit_cumsum) 
 
@@ -177,7 +174,7 @@ max = max(preds$fit_cumsum)
                        breaks = axisf$breaks, labels = axisf$labels) +
     scale_y_continuous(limits = c(0, max * 1.1),
                        labels = scales::comma) +
-    geom_text(aes(x = 1975, y = 150000, label="A)"),family="Times New Roman", colour="black", size=4) +
+    geom_text(aes(x = 1970, y = 145000, label="A)"),family="Times New Roman", colour="black", size=4) +
     theme(legend.position = c(0.2, 0.85), legend.title = element_blank (),
           legend.text=element_text(size=12)) +
     xlab('\nYear') +
@@ -199,7 +196,7 @@ plot1
     theme(legend.position = c(0.15, 0.85)) +
     theme ( legend.title = element_blank ()) +
     xlab('\nYear') +
-    geom_text(aes(x = 1975, y = 11500, label="B)"),family="Times New Roman", colour="black", size=4) +
+    geom_text(aes(x = 1985, y = 27000, label="B)"),family="Times New Roman", colour="black", size=4) +
     ylab('Difference\n') -> plot2
   plot2
   cowplot::plot_grid(plot1, plot2,  align = "v", nrow = 2, ncol=1) 
@@ -235,7 +232,7 @@ f_run95 <- function(preds, run_through, perc = 0.95){ #change perc to 0.90 for a
 
 f_pred_plot <- function(preds, run_through, perc = 0.95){ #change perc to 0.90 for alt run
   run_through = run_through$end_date
-  
+  max = max(preds$fit_cumsum) 
   preds %>%
     filter(year>=year_num)%>%
     group_by(., year) %>%
@@ -246,16 +243,16 @@ f_pred_plot <- function(preds, run_through, perc = 0.95){ #change perc to 0.90 f
     group_by(., year) %>%
     left_join(x, .) %>% 
     mutate(julian95 = ifelse(julian == run_95, fit_cumsum, NA),
-           alpha = ifelse(julian>run_95, 0.6, .8)) %>% 
+           alpha = ifelse(julian>run_95, 0.1, .2)) %>% 
     ggplot(aes(julian, fit_cumsum, color = Year, group = Year)) +
     geom_line(aes(alpha = alpha)) +
-    geom_point(aes(y = cumsum), alpha = 0.15) +
+    geom_point(aes(y = cumsum), alpha = 0.2) +
     geom_point(aes(y = julian95, fill=Year), alpha = 0.90, pch = 21) +
     scale_y_continuous(limits = c(0, max * 1.1),
                        labels = scales::comma) +
     geom_vline(xintercept=run_through, lty = 3) +
     scale_alpha(guide = 'none') +
-    xlab('\nJulian date') +
+    xlab('\nJulian day') +
     ylab('Cumulative Escapement\n') -> x
   
   ggsave(paste0('figs/', folder, "/pred_plot.png"), plot = x, dpi = 100, 
@@ -265,7 +262,7 @@ f_pred_plot <- function(preds, run_through, perc = 0.95){ #change perc to 0.90 f
   
 }
 
-f_pred1990_plot <- function(preds, run_through, perc = 0.95){ #change perc to 0.90 for alt run
+f_pred1999_plot <- function(preds, run_through, perc = 0.95){ #change perc to 0.90 for alt run
   run_through = run_through$end_date
 
   preds %>%
@@ -279,7 +276,7 @@ f_pred1990_plot <- function(preds, run_through, perc = 0.95){ #change perc to 0.
     mutate(julian95 = ifelse(julian == run_95, fit_cumsum, NA),
            alpha = ifelse(julian>run_95, .6, .7),
            decade = year - year %% 1) %>%
-    filter (year < 1991) %>%
+    filter (year < 1980) %>%
     ggplot(aes(julian, fit_cumsum , group = Year)) +
     geom_line(aes(alpha = alpha)) +
     geom_point(aes(y = cumsum ), alpha = 0.1) +
@@ -289,16 +286,50 @@ f_pred1990_plot <- function(preds, run_through, perc = 0.95){ #change perc to 0.
     geom_vline(xintercept=run_through, lty = 3) +
     scale_fill_discrete(guide = 'none') +
     theme(legend.position="none") +
-    xlab('\nJulian date') +
+    xlab('\nJulian day') +
     ylab('Cumulative Escapement\n') +
     facet_wrap(~decade, dir = 'v') -> x
   print(x)
 
-  ggsave(paste0('figs/', folder, "/pred_plot_1990year.png"), plot = x, dpi = 100,
+  ggsave(paste0('figs/', folder, "/pred_plot_1999year.png"), plot = x, dpi = 100,
          height = 10, width = 8.5, units = "in")
 }
 
-f_pred1991_plot <- function(preds, run_through){
+f_pred2000_plot <- function(preds, run_through){
+  run_through = run_through$end_date
+
+  preds %>%
+    group_by(., year) %>%
+    filter(fit_cumsum <= perc * max(fit_cumsum)) %>%
+    summarise(run_95 = max(julian)) -> x
+
+  preds %>%
+    group_by(.,year) %>%
+    left_join(x, .) %>%
+    mutate(julian95 = ifelse(julian == run_95, fit_cumsum, NA),
+           alpha = ifelse(julian>run_95, 0.6, .7),
+           decade = year - year %% 1) %>%
+    filter (year > 1979) %>%
+    filter (year < 1991) %>%
+    ggplot(aes(julian, fit_cumsum , group = Year)) +
+    geom_line(aes(alpha = alpha)) +
+    geom_point(aes(y = cumsum ), alpha = 0.1) +
+    geom_point(aes(y = julian95 , fill=Year), alpha = 0.80, pch = 21, size =2) +
+    scale_y_continuous(labels = comma) +
+    scale_alpha(guide = 'none') +
+    scale_fill_discrete(guide = 'none') +
+    geom_vline(xintercept=run_through, lty = 3) +
+    theme(legend.position="none") +
+    xlab('\nJulian day') +
+    ylab('Cumulative Escapement\n') +
+    facet_wrap(~decade, dir = 'v') -> x
+  print(x)
+
+  ggsave(paste0('figs/', folder, "/pred_plot_2000year.png"), plot = x, dpi = 100,
+         height = 10, width = 8.5, units = "in")
+}
+
+f_pred2010_plot <- function(preds, run_through){ #change perc to 0.90 for alt run
   run_through = run_through$end_date
 
   preds %>%
@@ -313,40 +344,40 @@ f_pred1991_plot <- function(preds, run_through){
            alpha = ifelse(julian>run_95, 0.6, .7),
            decade = year - year %% 1) %>%
     filter (year > 1990) %>%
-    filter (year < 2002) %>%
+    filter (year < 2000) %>%
     ggplot(aes(julian, fit_cumsum , group = Year)) +
     geom_line(aes(alpha = alpha)) +
     geom_point(aes(y = cumsum ), alpha = 0.1) +
     geom_point(aes(y = julian95 , fill=Year), alpha = 0.80, pch = 21, size =2) +
     scale_y_continuous(labels = comma) +
+    geom_vline(xintercept=run_through, lty = 3) +
     scale_alpha(guide = 'none') +
     scale_fill_discrete(guide = 'none') +
-    geom_vline(xintercept=run_through, lty = 3) +
     theme(legend.position="none") +
-    xlab('\nJulian date') +
+    xlab('\nJulian day') +
     ylab('Cumulative Escapement\n') +
     facet_wrap(~decade, dir = 'v') -> x
   print(x)
 
-  ggsave(paste0('figs/', folder, "/pred_plot_1991year.png"), plot = x, dpi = 100,
+  ggsave(paste0('figs/', folder, "/pred_plot_2010year.png"), plot = x, dpi = 100,
          height = 10, width = 8.5, units = "in")
 }
 
-f_pred2001_plot <- function(preds, run_through){ #change perc to 0.90 for alt run
+f_pred2015_plot <- function(preds, run_through){ #change perc to 0.90 for alt run
   run_through = run_through$end_date
-
+  
   preds %>%
     group_by(., year) %>%
     filter(fit_cumsum <= perc * max(fit_cumsum)) %>%
     summarise(run_95 = max(julian)) -> x
-
+  
   preds %>%
     group_by(.,year) %>%
     left_join(x, .) %>%
     mutate(julian95 = ifelse(julian == run_95, fit_cumsum, NA),
            alpha = ifelse(julian>run_95, 0.6, .7),
            decade = year - year %% 1) %>%
-    filter (year > 2001) %>%
+    filter (year > 1999) %>%
     ggplot(aes(julian, fit_cumsum , group = Year)) +
     geom_line(aes(alpha = alpha)) +
     geom_point(aes(y = cumsum ), alpha = 0.1) +
@@ -356,15 +387,14 @@ f_pred2001_plot <- function(preds, run_through){ #change perc to 0.90 for alt ru
     scale_alpha(guide = 'none') +
     scale_fill_discrete(guide = 'none') +
     theme(legend.position="none") +
-    xlab('\nJulian date') +
+    xlab('\nJulian day') +
     ylab('Cumulative Escapement\n') +
     facet_wrap(~decade, dir = 'v') -> x
   print(x)
-
-  ggsave(paste0('figs/', folder, "/pred_plot_2001year.png"), plot = x, dpi = 100,
+  
+  ggsave(paste0('figs/', folder, "/pred_plot_2015year.png"), plot = x, dpi = 100,
          height = 10, width = 8.5, units = "in")
 }
-
 
 # f_pred_plot_decade <- function(preds, run_through){
 #   run_through = run_through$end_date
@@ -388,7 +418,7 @@ f_pred2001_plot <- function(preds, run_through){ #change perc to 0.90 for alt ru
 #     geom_vline(xintercept=run_through, lty = 3) +
 #     scale_alpha(guide = 'none') +
 #     scale_fill_discrete(guide = 'none') +
-#     xlab('\nJulian date') +
+#     xlab('\nJulian day') +
 #     ylab('Cumulative Escapement\n') +
 #     facet_wrap(~decade, dir = 'v') -> x
 #   print(x)
@@ -584,6 +614,7 @@ f_risk_plot <- function(preds, remove_dates){
     scale_color_brewer(palette = "Dark2") +
     xlab('% Risk') +
     ylab('% of missed run') +
+    scale_y_continuous(limits = c(0, 8), breaks = c(0,1,2,3,4,5,6,7,8)) +
     expand_limits(y = 0) +
     ggtitle(z) -> x
   print(x)

@@ -1,5 +1,5 @@
 # Weir 1% rule
-# Situk R. analysis
+# Chilkat R. analysis
 
 # ben.williams@alaska.gov
 # 2019-03
@@ -12,21 +12,23 @@
 
 # load ----
 source('code/helper.r')
-source('code/functions_Situk.r')
+source('code/functions_Chilkat.r')
 
 # globals ----
-folder <- 'situk'
+folder <- 'chilkat'
 
 # data ----
 # data inputs are date (mm/dd/yyyy) and weir count
-read_csv('data/situk_weir_1988-2021.csv') %>% 
-  filter(species=='Sockeye') %>% 
-  dplyr::select(date, count) -> situk
-year_num <-2012# years to include in run_through (years >= to year_num)
+read_csv('data/chilkat_weir_1971-2021.csv') %>% 
+  filter(species=='Sockeye') %>%
+  #filter(year<2000) %>%
+  mutate(count = ifelse(count<0,0, count))%>%
+  dplyr::select(date, count) -> chilkat
+year_num <-1971# years to include in run_through (years >= to year_num)
 # run functions ----
 
 # format data
-f_clean_data(situk) -> df
+f_clean_data(chilkat) -> df
 
 # model gompertz function
 f_gomp_model(df) -> model_gompertz
@@ -63,7 +65,7 @@ f_preds(df, model_gompertz) -> preds #preds.csv
 f_table_output(preds) # total count of raw versus fitted; summary_table.csv
 
 # plot of data cumsum (raw data) and fit_cumsum
-tickryr <- data.frame(year = 1985:2025)
+tickryr <- data.frame(year = 1970:2025)
 axisf <- tickr(tickryr, year, 5)
 f_plot_output(preds) # fitted_plot.png
 
@@ -77,7 +79,7 @@ f_pred_plot(preds, run_through) # pred_plot.png
 f_pred1999_plot(preds, run_through) # pred_plot1990.png
 f_pred2000_plot(preds, run_through) # pred_plot1991.png
 f_pred2010_plot(preds, run_through) # pred_plot2001.png
-
+f_pred2015_plot(preds, run_through)
 # dates the weirs would be removed based upon 1%  rule
 # for 5,4,3, or 2 days
 f_remove_dates(preds, run_through) -> remove_dates 

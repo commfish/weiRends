@@ -31,9 +31,9 @@ year_num <-2012 # years to include in run_through
 f_clean_data(chilkoot) -> df
 
 # model gompertz function
-f_gomp_model(df) -> model
-saveRDS(model, paste0('output/', folder, '/model.rda'))
-readRDS(paste0('output/', folder, '/model.rda')) -> model
+f_gomp_model(df) -> model_gompertz
+saveRDS(model_gompertz, paste0('output/', folder, '/gompertz_model.rda'))
+readRDS(paste0('output/', folder, '/gompertz_model.rda')) -> model_gompertz
 
 # model logistic function
 f_logistic_model(df) -> model_logistic
@@ -43,13 +43,13 @@ readRDS(paste0('output/', folder, '/logistic_model.rda')) -> model_logistic
 # check model fits - did all models converge?
 # if not may need to go into f_gomp_model and change the lower 
 # and upper starting values isConv=TRUE
-f_summary(model)
+f_summary(model_gompertz)
 f_summary(model_logistic)
 
 # which model performs better
-# >0.50 = model 1
-# <0.50 = model 2
-f_deviance(model, model_logistic) # check model fits - did all models converge?
+# >0.50 = model 1 (model_gompertz)
+# <0.50 = model 2 (model_logistic)
+f_deviance(model_gompertz, model_logistic) # check model fits - did all models converge?
 
 # get parameters
 f_params(model_logistic) -> params # choose model based on deviance
