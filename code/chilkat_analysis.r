@@ -21,15 +21,17 @@ folder <- 'chilkat'
 # data inputs are date (mm/dd/yyyy) and weir count
 read_csv('data/chilkat_weir_1971-2021.csv') %>% 
   filter(species=='Sockeye') %>%
-  #filter(year<2000) %>%
-  mutate(count = ifelse(count<0,0, count))%>%
+  #mutate(count = ifelse(count<0,0, count))%>%
   dplyr::select(date, count) -> chilkat
-year_num <-1971# years to include in run_through (years >= to year_num)
+year_num <-1971# years to include in run_through (years >= to year_num); for the analysis, only include years 2012+
+#year_num <-1971# years to include in run_through (years >= to year_num); 
 # run functions ----
 
 # format data
 f_clean_data(chilkat) -> df
-
+df %>% 
+  filter(!year >=1996 | !year <= 1998)-> df # for the analysis, include entire time series
+  #filter(year>2011)-> df # for the analysis, only include years 2012+
 # model gompertz function
 f_gomp_model(df) -> model_gompertz
 saveRDS(model_gompertz, paste0('output/', folder, '/gompertz_model.rda'))
@@ -50,7 +52,7 @@ f_summary(model_logistic)
 # >0.50 = model 1 (model_gompertz)
 # <0.50 = model 2 (model_logistic)
 f_deviance(model_gompertz, model_logistic) # check model fits - did all models converge?
-# need to change all references to correct model after 'best' model is chosen
+# need to change all references to correct model (below) after 'best' model is chosen
 
 # get parameters
 f_params(model_gompertz) -> params # choose model based on deviance
@@ -65,8 +67,8 @@ f_preds(df, model_gompertz) -> preds #preds.csv
 f_table_output(preds) # total count of raw versus fitted; summary_table.csv
 
 # plot of data cumsum (raw data) and fit_cumsum
-tickryr <- data.frame(year = 1970:2025)
-axisf <- tickr(tickryr, year, 5)
+tickryr <- data.frame(year = 2010:2025)
+axisf <- tickr(tickryr, year, 1)
 f_plot_output(preds) # fitted_plot.png
 
 # what is the minimum day that the weir should be in place?

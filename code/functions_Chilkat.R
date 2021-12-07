@@ -156,16 +156,23 @@ f_plot_output <- function (preds){ # fitted cumulative sum versus raw and diff b
   
 max = max(preds$fit_cumsum) 
 
-  preds %>% 
-    group_by(year) %>%
-    summarise(count = max(cumsum, na.rm = T),
-              value = 'cumulative sum') -> x
+  expand.grid(year = min(preds$year):max(preds$year)) -> all_days 
   
   preds %>% 
+    left_join(all_days, .) %>%
+    group_by(year) %>% 
+    summarise(count = max(cumsum, na.rm = T),
+              value = 'cumulative sum')%>%
+    mutate(count = ifelse(count == '-Inf', '', count)) -> x
+  
+  preds %>% 
+    left_join(all_days, .) %>%
     group_by(year) %>%
     summarise(count = max(fit_cumsum, na.rm = T),
-              value = 'fitted cumulative sum') %>%
+              value = 'fitted cumulative sum')%>%
+    mutate(count = ifelse(count == '-Inf', '', count))%>%
   rbind(.,x) %>%
+    mutate(count=as.numeric(count))%>%
     as.data.frame() %>% 
     ggplot() +
     geom_line(aes(x = year, y = count, group = value, lty = value, color = value)) +
@@ -174,8 +181,9 @@ max = max(preds$fit_cumsum)
                        breaks = axisf$breaks, labels = axisf$labels) +
     scale_y_continuous(limits = c(0, max * 1.1),
                        labels = scales::comma) +
-    geom_text(aes(x = 1970, y = 145000, label="A)"),family="Times New Roman", colour="black", size=4) +
-    theme(legend.position = c(0.2, 0.85), legend.title = element_blank (),
+    #geom_text(aes(x = 1970, y = 350000, label="A)"),family="Times New Roman", colour="black", size=4) +
+    geom_text(aes(x = 2010, y = 290000, label="A)"),family="Times New Roman", colour="black", size=4) +
+    theme(legend.position = c(0.85, 0.9), legend.title = element_blank (),
           legend.text=element_text(size=12)) +
     xlab('\nYear') +
     ylab('Counts\n') -> plot1
@@ -196,7 +204,8 @@ plot1
     theme(legend.position = c(0.15, 0.85)) +
     theme ( legend.title = element_blank ()) +
     xlab('\nYear') +
-    geom_text(aes(x = 1985, y = 27000, label="B)"),family="Times New Roman", colour="black", size=4) +
+    #geom_text(aes(x = 1970, y = 200000, label="B)"),family="Times New Roman", colour="black", size=4) +
+    geom_text(aes(x = 2010, y = 200000, label="B)"),family="Times New Roman", colour="black", size=4) +
     ylab('Difference\n') -> plot2
   plot2
   cowplot::plot_grid(plot1, plot2,  align = "v", nrow = 2, ncol=1) 
@@ -227,6 +236,8 @@ f_run95 <- function(preds, run_through, perc = 0.95){ #change perc to 0.90 for a
     group_by(., year) %>%
     filter(fit_cumsum <= perc * max(fit_cumsum)) %>%
     summarise(run_95 = max(julian)) %>%
+    #summarise(run_95 = max(julian),
+    #          fit_cumsum=max(fit_cumsum)) %>%
   write_csv(., paste0('output/', folder, '/run_95.csv'))
 }
 
@@ -276,7 +287,7 @@ f_pred1999_plot <- function(preds, run_through, perc = 0.95){ #change perc to 0.
     mutate(julian95 = ifelse(julian == run_95, fit_cumsum, NA),
            alpha = ifelse(julian>run_95, .6, .7),
            decade = year - year %% 1) %>%
-    filter (year < 1980) %>%
+    filter (year < 1983) %>%
     ggplot(aes(julian, fit_cumsum , group = Year)) +
     geom_line(aes(alpha = alpha)) +
     geom_point(aes(y = cumsum ), alpha = 0.1) +
@@ -309,8 +320,8 @@ f_pred2000_plot <- function(preds, run_through){
     mutate(julian95 = ifelse(julian == run_95, fit_cumsum, NA),
            alpha = ifelse(julian>run_95, 0.6, .7),
            decade = year - year %% 1) %>%
-    filter (year > 1979) %>%
-    filter (year < 1991) %>%
+    filter (year > 1982) %>%
+    filter (year < 1995) %>%
     ggplot(aes(julian, fit_cumsum , group = Year)) +
     geom_line(aes(alpha = alpha)) +
     geom_point(aes(y = cumsum ), alpha = 0.1) +
@@ -343,8 +354,8 @@ f_pred2010_plot <- function(preds, run_through){ #change perc to 0.90 for alt ru
     mutate(julian95 = ifelse(julian == run_95, fit_cumsum, NA),
            alpha = ifelse(julian>run_95, 0.6, .7),
            decade = year - year %% 1) %>%
-    filter (year > 1990) %>%
-    filter (year < 2000) %>%
+    filter (year > 1994) %>%
+    filter (year < 2010) %>%
     ggplot(aes(julian, fit_cumsum , group = Year)) +
     geom_line(aes(alpha = alpha)) +
     geom_point(aes(y = cumsum ), alpha = 0.1) +
@@ -377,7 +388,7 @@ f_pred2015_plot <- function(preds, run_through){ #change perc to 0.90 for alt ru
     mutate(julian95 = ifelse(julian == run_95, fit_cumsum, NA),
            alpha = ifelse(julian>run_95, 0.6, .7),
            decade = year - year %% 1) %>%
-    filter (year > 1999) %>%
+    filter (year > 2009) %>%
     ggplot(aes(julian, fit_cumsum , group = Year)) +
     geom_line(aes(alpha = alpha)) +
     geom_point(aes(y = cumsum ), alpha = 0.1) +
@@ -614,7 +625,7 @@ f_risk_plot <- function(preds, remove_dates){
     scale_color_brewer(palette = "Dark2") +
     xlab('% Risk') +
     ylab('% of missed run') +
-    scale_y_continuous(limits = c(0, 8), breaks = c(0,1,2,3,4,5,6,7,8)) +
+    scale_y_continuous(limits = c(0, 6), breaks = c(0,1,2,3,4,5,6)) +
     expand_limits(y = 0) +
     ggtitle(z) -> x
   print(x)
