@@ -24,14 +24,14 @@ read_csv('data/chilkat_weir_1971-2021.csv') %>%
   #mutate(count = ifelse(count<0,0, count))%>%
   dplyr::select(date, count) -> chilkat
 year_num <-1971# years to include in run_through (years >= to year_num); for the analysis, only include years 2012+
-#year_num <-1971# years to include in run_through (years >= to year_num); 
+
 # run functions ----
 
 # format data
 f_clean_data(chilkat) -> df
 df %>% 
-  filter(!year >=1996 | !year <= 1998)-> df # for the analysis, include entire time series
-  #filter(year>2011)-> df # for the analysis, only include years 2012+
+  filter(!year >=1996 | !year <= 1998)-> df # for the analysis, include entire time series (a few years of missing data for the entire year)
+
 # model gompertz function
 f_gomp_model(df) -> model_gompertz
 saveRDS(model_gompertz, paste0('output/', folder, '/gompertz_model.rda'))
@@ -67,7 +67,7 @@ f_preds(df, model_gompertz) -> preds #preds.csv
 f_table_output(preds) # total count of raw versus fitted; summary_table.csv
 
 # plot of data cumsum (raw data) and fit_cumsum
-tickryr <- data.frame(year = 2010:2025)
+tickryr <- data.frame(year = 2010:2025)# may need to adjust based on year_num
 axisf <- tickr(tickryr, year, 1)
 f_plot_output(preds) # fitted_plot.png
 
@@ -97,3 +97,73 @@ f_risk_plot(preds, remove_dates) # remove_dates_risk_plot.png
 # median, 25% and 75% quantiles of weir end date
 f_median_end_date(remove_dates)
 
+## global function implementation ##-----------------------------------------------------------------------------------------------------
+# data ----
+# data inputs are date (mm/dd/yyyy) and weir count
+read_csv('data/chilkat_weir_1971-2021.csv') %>% 
+  filter(species=='Sockeye') %>%
+  #mutate(count = ifelse(count<0,0, count))%>%
+  dplyr::select(date, count) -> chilkat
+year_num <-2012# years to include in run_through (years >= to year_num); for the analysis, only include years 2012+
+
+# run functions ----
+
+# format data
+f_clean_data(chilkat) -> df
+df %>% 
+  filter(!year >=1996 | !year <= 1998)-> df # for the analysis, include entire time series (a few years of missing data for the entire year)
+
+df %>%
+  mutate (stream_name = julian) %>%
+  dplyr::select(year, stream_name, count, date, Year, cumsum) %>%
+  impute_global(., Year_column="year")
+
+read_csv(paste0('output/', folder, '/EM_algorithm_model.csv'))  %>% 
+  arrange(year, stream_name) %>%
+  group_by(.,year) %>% 
+  mutate(julian = stream_name,
+         fit_run = count,
+         fit_cumsum = cumsum(fit_run),
+         Year = factor(year)) %>%
+  dplyr::select(julian, year, Year, fit_run, fit_cumsum, Year) -> preds
+
+
+df %>%
+  dplyr::select(julian, year, count, cumsum) %>%
+  merge(., preds) -> preds
+write_csv(preds, paste0('output/', folder, '/preds.csv'))  
+
+# table of data cumsum (raw data) and fit_cumsum
+f_table_output(preds) # total count of raw versus fitted; summary_table.csv
+
+
+# plot of data cumsum (raw data) and fit_cumsum
+tickryr <- data.frame(year = 1970:2025) # may need to adjust based on year_num
+axisf <- tickr(tickryr, year, 5)
+f_plot_output(preds) # fitted_plot.png
+
+# what is the minimum day that the weir should be in place?
+# the 95th percentile of the Julian date that 95% of the modeled run has been observed in the last 10 years only - 
+f_run_through(preds) -> run_through # run_through.csv file
+
+# plot the predicted data and fits 
+f_run95(preds, run_through) # outputs the 95% cumsum by year as a Julian date; run_95.csv
+f_pred_plot(preds, run_through) # pred_plot.png
+f_pred1999_plot(preds, run_through) # pred_plot1990.png
+f_pred2000_plot(preds, run_through) # pred_plot1991.png
+f_pred2010_plot(preds, run_through) # pred_plot2001.png
+f_pred2015_plot(preds, run_through)
+# dates the weirs would be removed based upon 1%  rule
+# for 5,4,3, or 2 days
+f_remove_dates(preds, run_through) -> remove_dates 
+f_remove_dates_table(preds, run_through) # remove_dates_table.csv
+
+# percent of the run that is caught at a given risk level
+f_percent_missed (preds, remove_dates) # percent_missed.csv
+f_run_caught(preds, remove_dates) # remove_dates_run_caught.csv
+
+# plot of missed run and risk
+f_risk_plot(preds, remove_dates) # remove_dates_risk_plot.png
+
+# median, 25% and 75% quantiles of weir end date
+f_median_end_date(remove_dates)

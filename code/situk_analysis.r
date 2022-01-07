@@ -110,7 +110,7 @@ df %>%
   dplyr::select(year, stream_name, count, date, Year, cumsum) %>%
 impute_global(., Year_column="year")
 
-read_csv('output/situk/EM_algorithm_model.csv') %>%
+read_csv(paste0('output/', folder, '/EM_algorithm_model.csv'))%>% 
   arrange(year, stream_name) %>%
   group_by(.,year) %>% 
   mutate(julian = stream_name,
