@@ -2,7 +2,7 @@
 title: "1% Weir Escapement Rule" 
 subtitle: "Situk Lake Sockeye Salmon"
 author: "Sara Miller and Steve Heinl"
-date: "January 6, 2021"
+date: "January 14, 2022"
 output:
   bookdown::word_document2:
     fig_caption: yes
@@ -27,18 +27,27 @@ library(knitr)
 fs::dir_ls(here::here('output/situk/1988_2021/global_missfill'), regexp = "\\.csv$") %>% 
   set_names(nm = (basename(.) %>% 
                     tools::file_path_sans_ext())) %>%
-  map(read_csv) -> tbls_situk
+  map(read_csv) -> tbls_situk_global_missfill
 fs::dir_ls(here::here('output/situk/2012_2021/global_missfill'), regexp = "\\.csv$") %>% 
   set_names(nm = (basename(.) %>% 
                     tools::file_path_sans_ext())) %>%
-  map(read_csv) -> tbls_situk_ten_years
+  map(read_csv) -> tbls_situk_ten_years_global_missfill
+fs::dir_ls(here::here('output/situk/1988_2021/gompertz'), regexp = "\\.csv$") %>% 
+  set_names(nm = (basename(.) %>% 
+                    tools::file_path_sans_ext())) %>%
+  map(read_csv) -> tbls_situk_gompertz
+fs::dir_ls(here::here('output/situk/2012_2021/gompertz'), regexp = "\\.csv$") %>% 
+  set_names(nm = (basename(.) %>% 
+                    tools::file_path_sans_ext())) %>%
+  map(read_csv) -> tbls_situk_ten_years_gompertz
+
 ```
 
 
 # Background
 There were two objectives in this study.
 
-  1. The first objective was to quantify the date to which the weir would be required to be operated through (e.g., would capture 95% of the escapement with 95% probability; the hard date). The earliest date a project can end is the day after the hard date.  Missing escapement counts were interpolated using the EM algorithm (McLachlan and Krishnan 1997). 
+  1. The first objective was to quantify the date to which the weir would be required to be operated through (e.g., would capture 95% of the escapement with 95% probability; the hard date). The earliest date a project can end is the day after the hard date. 
   
   2. The second objective was to estimate the percent of counts missed if the project was operated following the $x$-day 1% rule (daily counts equal less than 1% of the cumulative count for $x$ days (1, 2, 3, 4, or 5 days) in a row up to and including the hard date). For example, if the hard date is Julian day 247 and days 243 to 247 are <1% of the cumulative counts for 5 days, then the end date for that year would be Julian day 248.   
 
@@ -62,79 +71,122 @@ This is for a single species at a single weir.
 No other values or comments should be included in the file. 
 Data should be provided in .csv format. 
 
-# Analysis
-A reconstructed escapement is estimated using observed daily data, filling in any data gaps with estimated daily escapement numbers from an iterative procedure (EM algorithm; McLachlan and Krishnan 1997). Missing values of the escapement were filled in under the assumption that the expected count is determined by a given year and Julian day in a multiplicative way. The estimated expected count for a given Julian day in a given year is equal to the sum of all counts for the particular Julian day times the sum of all counts for the year divided by the sum of all counts over all Julian days and years. If there is more than one missing value, an iterative procedure (as described in Brown 1974) is used since the sums change as missing values are filled in at each step. This reconstructed escapement is then used to compute a cumulative sum of escapement. The date that a weir should remain in place to capture the 95th percentile of 95% of the escapement is calculated using the reconstructed cumulative sums.
+# Methods
+Three methods were used to estimate tails of the run when weir operations did not capture the entire escapement (particularly the end of the escapement; Gompertz model, logistic model, and the EM algorithm). 
 
-```{r pred-koot, fig.cap="Predicted cumulative escapements by year for the Situk River. Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir. This is the hard date (Julian day 219). The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
+## Gompertz and logistic models
+Two models were considered first:
+
+the Gompertz model 
+$$p\mathrm{e}^{{-e}^{-k(t-t_0)}},$$ 
+and the logistic model 
+$$\frac{p}{\mathrm{1+e}^{-k(t-t_0)}}.$$ 
+The variable *p* represents the asymptote of the cumulative escapement, *k* is the steepness of the curve, and *t*~0~ is the inflection point of the curve. These models were used in 1% rule analysis for Bristol Bay and Upper Cook Inlet salmon stocks (Scott Rayborn, pers. comm.). 
+
+The evaluation process starts by fitting both models, and then the model with the least total variance is chosen for the analysis. Cumulative escapement is predicted from the selected model and then this is converted into the number of estimated fish past the weir for a given day. A reconstructed escapement is estimated using observed daily data, filling in any data gaps with estimated daily escapement numbers. This reconstructed escapement is then used to compute a cumulative sum of escapement. The date that a weir should remain in place to capture the 95th percentile of 95% of the escapement is calculated using the reconstructed cumulative sums. Based on the model deviance, the Gompertz model provided an overall better fit to the data than the logistic model. None of the parameter estimates had substantial error bars (Figure \@ref(fig:param-situk-gompertz)) and the models converged for all years. Reconstructed escapements are shown in Figure \@ref(fig:pred-situk-gompertz).
+
+```{r param-situk-gompertz, fig.cap="Parameter estimates from the Gompertz model for Situk River sockeye salmon (1988-2021)."}
+knitr::include_graphics(here("figs/situk/1988_2021/gompertz/param_plot.png"))
+```
+
+
+```{r pred-situk-gompertz, fig.cap="Predicted cumulative escapments by year for the Situk River using the Gompertz model (1988-2021). Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir. This is the hard date (17 August or Julian day 229). The circles are the cumulative escapement data and the lines are the predicted cumulative escapements. "}
+knitr::include_graphics(here("figs/situk/1988_2021/gompertz/pred_plot.png"))
+```
+## EM algorithm
+A third method was used to reconstruct escapement using observed historical data to fill data gaps with estimated daily escapement numbers using an iterative procedure (EM algorithm; McLachlan and Krishnan 1997). Missing values of the escapement were filled in under the assumption that the expected count is determined by a given year and Julian day in a multiplicative way. The estimated expected count for a given Julian day in a given year is equal to the sum of all counts for the particular Julian day times the sum of all counts for the year divided by the sum of all counts over all Julian days and years. If there is more than one missing value, an iterative procedure (as described in Brown 1974) is used since the sums change as missing values are filled in at each step. Reconstructed escapement is then used to compute a cumulative sum of escapement. The date that a weir should remain in place to capture the 95th percentile of 95% of the escapement is calculated using the reconstructed cumulative sums. This method requires observed data as late as possible into the season. The Situk River weir was operated later than 10 August only in 1988 (21 August), 1989 (17 August), 2006 (15 August), 2007 (13 August), and 2016 (11 August). Thus, interpolated values later than 10 August for all years were based largely on run timing in those 5 years. In addition, data cannot be interpolated for days in which no data exist; thus, the latest date escapements could be reconstructed was through 21 August.  Reconstructed escapements are shown in Figure \@ref(fig:pred-situk).
+
+```{r pred-situk, fig.cap="Predicted cumulative escapements by year for the Situk River using an EM Algorithm (1988-2021). Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir. This is the hard date (9 August or Julian day 221). The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
 knitr::include_graphics(here("figs/situk/1988_2021/global_missfill/pred_plot.png"))
 ```
 
-
 ## 1% Rule (*Hard Date* and *End Date*)  
 
-### Time Series (1988-2021)  
-Using all the data in the time series (1988-2021), the 95th percentile date when 95% of the escapement has passed the weir is Julian day `r tbls_situk$run_through$end_date` or approximately 9 August (the hard date). The earliest date the project can end is Julian day 222 or approximately 10 August (Julian day `r tbls_situk$run_through$end_date` plus one day; end date). Based upon these dates, there is a 95% chance of capturing roughly 97% of the total escapement for the 5-day weir removal rule (number of days; Table \@ref(tab:chance-koot)). In addition, there is a 50% chance of capturing almost 100% of the escapement for the 5-day weir removal rule. This is also reflected in the percent risk as well (Figure \@ref(fig:risk-koot)); Figure \@ref(fig:risk-koot) reflects the inverse of Table \@ref(tab:chance-koot). For example, a 99% chance is the same as a 1% risk. About 4%  of the escapement is missed (i.e., 96% caught) at a given risk level (99% chance or 1% risk level) based on implementing a 5-day 1% rule. 
+### Gompertz Model
+Using all the data in the time series (1988-2021), the 95th percentile date when 95% of the escapement has passed the weir is Julian day `r tbls_situk_gompertz$run_through$hard_date` or approximately 17 August (the hard date). The earliest date the project can end is Julian day 230 or approximately 18 August (Julian day `r tbls_situk_gompertz$run_through$hard_date` plus one day; end date). Based upon these dates, there is a 95% chance of capturing roughly 96% of the total escapement for the 3-day rule. (number of days; Table \@ref(tab:chance-situk-gompertz)). In addition, there is a 50% chance of capturing about 98% of the escapement for the 3-day rule (number of days; Table \@ref(tab:chance-situk-gompertz)).
 
-The projected median date that the project would end is Julian day 231 (roughly 19 August) for the  5-day weir removal rule (Table \@ref(tab:remove-koot)). The project end date was based on the entire time series and estimates of when the weir would have been removed had the 1% rule been used to manage weir operations. The maximum date of weir removal was Julian day 231 (roughly 19 August) using the 5-day 1% rule, Julian day 230 (roughly 18 August) using the 4-day 1% rule, and Julian day 229 (roughly 17 August) using the 3-day 1% rule (Table \@ref(tab:remove-koot)). 
+The projected median date that the project would end is Julian day 230 (approximately 18 August) for all weir removal rules (Table \@ref(tab:remove-situk-gompertz)). The project end date was based on the entire time series (1988-2021) and estimates of when the weir would have been removed had the 1% rule been used to manage weir operations. The maximum date of weir removal was Julian day 233 (approximately 21 August) using the 3-day 1% rule, and Julian day 234 (approximately 22 August) using the 4-day and 5-day 1% rules (Table \@ref(tab:remove-situk-gompertz)).
 
-```{r chance-koot, results = 'asis'}
-tbls_situk$remove_dates_run_caught %>% 
-   knitr::kable(format = 'pandoc', caption = 'The percent of the escapement that is caught at a given risk level (% chance) based upon the number of days the 1% rule is implemented for the Situk River.')
+```{r chance-situk-gompertz, results = 'asis'}
+tbls_situk_gompertz$remove_dates_run_caught %>% 
+   knitr::kable(format = 'pandoc', caption = 'The percent of the escapement that is caught at a given risk level (% chance) based upon the number of days the 1% rule is implemented for the Situk River based on the Gompertz model (1988-2021).')
+```
+
+```{r remove-situk-gompertz, results = 'asis'}
+tbls_situk_gompertz$remove_dates_median_end %>% 
+   knitr::kable(format = 'pandoc', caption = 'Median and maximum end dates for weir removal based upon number of days to implement the 1% rule for the Situk River based on the Gompertz model (1988-2021).')
+```
+
+### EM Algorithm
+Using all the data in the time series (1988–2021), the 95th percentile date when 95% of the escapement has passed the weir is  Julian day `r tbls_situk_global_missfill$run_through$hard_date` or 9 August (the hard date). The earliest date the project can end is Julian day 222 or 10 August (Julian day `r tbls_situk_global_missfill$run_through$hard_date` plus one day; end date). Based upon these dates, there is a 95% chance of capturing roughly 95% of the total escapement for the 3-day weir removal rule (number of days; Table \@ref(tab:chance-situk-global-missfill)). In addition, there is a 50% chance of capturing almost 100% of the escapement for the 3-day weir removal rule. 
+
+The projected median date that the project would end is Julian day 229 (approximately 17 August) for the  3-day weir removal rule (Table \@ref(tab:remove-situk-global-missfill)). The project end date was based on the entire time series and estimates of when the weir would have been removed had the 1% rule been used to manage weir operations. The maximum date of weir removal was Julian day 229 (approximately 17 August) using the 3-day 1% rule, Julian day 230 (approximately 18 August) using the 4-day 1% rule, and Julian day 231 (approximately 19 August) using the 5-day 1% rule (Table \@ref(tab:remove-situk-global-missfill)).
+
+\pagebreak
+
+```{r chance-situk-global-missfill, results = 'asis'}
+tbls_situk_global_missfill$remove_dates_run_caught %>% 
+   knitr::kable(format = 'pandoc', caption = 'The percent of the escapement that is caught at a given risk level (% chance) based upon the number of days the 1% rule is implemented for the Situk River (1988-2021) using the EM algorithm.')
 ```
 
 
-```{r remove-koot, results = 'asis'}
-tbls_situk$remove_dates_median_end %>% 
-   knitr::kable(format = 'pandoc', caption = 'Median and maximum end dates for weir removal based upon number of days to implement the 1% rule for the Situk River.')
+```{r remove-situk-global-missfill, results = 'asis'}
+tbls_situk_global_missfill$remove_dates_median_end %>% 
+   knitr::kable(format = 'pandoc', caption = 'Median and maximum end dates for weir removal based upon number of days to implement the 1% rule for the Situk River (1988-2021) using the EM algorithm.')
 ```
 
+# Discussion
+In many years of weir operations, sockeye salmon were still migrating into the river in steady numbers when weir operations ended. For example, in 18 of 30 years, the weir was removed prior to 3 consecutive days with daily weir counts less than 1% of the cumulative count (not including 4 years when the weir was removed prior to 1 August). This also occurred in 5 of the past 10 years (2012–2021). 
 
-```{r risk-koot, fig.cap="The percent of the escapement that will be missed at a given risk level, e.g., about 3\\% of the escapement will be missed 5\\% of the time using a 5-day 1\\% rule for the Situk River."}
-knitr::include_graphics(here("figs/situk/1988_2021/global_missfill/remove_dates_risk_plot.png"))
-```
 
-### Time Series (2012-2021)    
+The drawbacks to the Gompertz (or logistic) model, to reconstruct escapement, are that the escapement tails may be overestimated and results may be affected by the parameters set for the model. For example, one of the model inputs is how far out the lengths of the tails are to be estimated. This can be set, for example, as the latest date of observed weir operations in the time series or 10 days (or more) after this date. Estimated escapement tails were consistently larger using the Gompertz model (see Appendix A Figure \@ref(fig:pred-situk-1990-gompertz) to \@ref(fig:pred-situk-cumsums-gompertz)) compared to the EM algorithm (see Appendix B Figure \@ref(fig:pred-situk-1990-global-missfill) to \@ref(fig:pred-situk-cumsums-global-missfill)); in many of those instances, estimated tails using the Gompertz model extended well beyond what would appear to be reasonable dates for the Situk River. The percent difference between the total raw counts and the counts adjusted by the Gompertz model ranged from 0% (year 1988) to 28% (year 1990) with an average percent change of 11% for all years (see Appendix A Figure \@ref(fig:pred-situk-cumsums-gompertz)). The percent difference between the total raw counts and the counts adjusted by the EM algorithm ranged from <1% (year 1989) to 25% (year 2008) with an average percent change of 8% for all years (see Appendix B Figure \@ref(fig:pred-situk-cumsums-global-missfill)). As a result, the estimated hard date was much later using results from the Gompertz model (`r tbls_situk_gompertz$run_through$hard_date` or approximately 17 August) as compared to using results from the EM algorithm (`r tbls_situk_global_missfill$run_through$hard_date` or 9 August). Conversely, estimated escapements using the EM algorithm performed much better at attenuating the tail of the run. 
 
-Compared to using the entire time series, results varied little if only the last ten years of the time series are used in the analysis (see Appendix Table \@ref(tab:chance-koot-ten-year) and Table \@ref(tab:remove-koot-ten-year); Figure \@ref(fig:ten-year-plot)). Using the last ten years of the time series (2012-2021), the 95th percentile date when 95% of the escapement has passed the weir  is Julian day `r tbls_situk_ten_years$run_through$end_date` or approximately 9 August (the hard date). The earliest date the project can end is Julian day 222 or approximately 10 August (Julian day `r tbls_situk_ten_years$run_through$end_date` plus one day; end date).  
+The drawbacks to using the EM algorithm include the requirement of a lot of observations late in the season (there are only 5 years in which the weir was operated later than 10 August), and the difficulty in adequately accounting for changes in run timing without recent years of late-season weir operations to include in the analysis. In addition, estimated escapements using the EM algorithm could not exceed 21 August, which was the latest date of observed weir operations. An additional drawback of the EM algorithm is that the estimated escapements in the tails of the run with missing counts had the same cumulative percent. The EM algorithm is adding counts to the tails with missing data so that the cumulative percents are the same across years with raw counts available and years with missing data. This is problematic in that the percent of the run that has passed the weir (by Julian day) is essentially the same across years with missing data in the tails.   
+
+Taking into account the drawbacks of the two methods (Gompertz model or EM algorithm method), we recommend using the estimated hard date of `r tbls_situk_global_missfill$run_through$hard_date` or approximately 9 August, based on the EM algorithm method. We recognize it may not be possible to operate the weir that late in the season every year due to deteriorating weather in August, but this date will serve as a potential, anticipated run through date for each year.
 
 
 # Conclusions
-  1. The hard date, the date to which the weir must be operated through, is Julian day `r tbls_situk$run_through$end_date` or approximately 9 August. 
+  1. The hard date, the date to which the weir must be operated through, is Julian day `r tbls_situk_global_missfill$run_through$hard_date` or approximately 9 August. 
   
-  3. Based upon the median weir removal date (end date; Julian day 231 (roughly 19 August)), using the number of days to implement the 1% rule for the Situk River, there is a 95% chance of capturing about 97% of the total escapement for the 5-day rule. 
+  2. Based upon the median weir removal date (end date; Julian day 229 (approximately 17 August)), using the number of days to implement the 1% rule for the Situk River, there is a 95% chance of capturing about 95% of the total escapement for the 3-day rule. 
   
 # References
 Brown, M. B. 1974. Identification of sources of significance in two-way contingency tables. Applied statistics 23:405-413. 
 
 McLachlan, G. J. and T. Krishnan. 1997. The EM algorithm and extensions. John Wiley and Sons. New York.
 
-# Appendix
-```{r pred-koot-1990, fig.cap="Predicted cumulative escapements by year for the Situk River. Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir. This is the hard date (approximately 9 August or Julian day 221). The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
+# Appendix A - Gompertz Model
+```{r pred-situk-1990-gompertz, fig.cap="Predicted cumulative escapements by year for the Situk River using the Gompertz model. Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir. This is the hard date (approximately 17 August or Julian day 229). The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
+knitr::include_graphics(here("figs/situk/1988_2021/gompertz/pred_plot_1999year.png"))
+```
+
+```{r pred-situk-1991-gompertz, fig.cap="Predicted cumulative escapements by year for the Situk River using the Gompertz model. Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir. This is the hard date (approximately 17 August or Julian day 229). The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
+knitr::include_graphics(here("figs/situk/1988_2021/gompertz/pred_plot_2000year.png"))
+```
+
+```{r pred-situk-2001-gompertz, fig.cap="Predicted cumulative escapements by year for the Situk River using the Gompertz model. Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir. This is the hard date (approximately 17 August or Julian day 229). The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
+knitr::include_graphics(here("figs/situk/1988_2021/gompertz/pred_plot_2010year.png"))
+```
+
+```{r pred-situk-cumsums-gompertz, fig.cap="A. Raw and fitted cumulative sums of the weir counts by year, based on the Gompertz model. B. Difference between the raw and fitted cumulative sums of the weir counts by year. The difference between the raw and fitted cumulative sums is the interpolated missing escapement counts."}
+knitr::include_graphics(here("figs/situk/1988_2021/gompertz/fitted_plot.png"))
+```
+
+# Appendix B - EM Algorithm
+```{r pred-situk-1990-global-missfill, fig.cap="Predicted cumulative escapements by year for the Situk River using the EM algorithm. Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir. This is the hard date (approximately 9 August or Julian day 221). The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
 knitr::include_graphics(here("figs/situk/1988_2021/global_missfill/pred_plot_1999year.png"))
 ```
 
-```{r pred-koot-1991, fig.cap="Predicted cumulative escapements by year for the Situk River. Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir. This is the hard date (approximately 9 August or Julian day 221). The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
+```{r pred-situk-1991-global-missfill, fig.cap="Predicted cumulative escapements by year for the Situk River using the EM algorithm. Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir. This is the hard date (approximately 9 August or Julian day 221). The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
 knitr::include_graphics(here("figs/situk/1988_2021/global_missfill/pred_plot_2000year.png"))
 ```
 
-```{r pred-koot-2001, fig.cap="Predicted cumulative escapements by year for the Situk River. Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir. This is the hard date (approximately 9 August or Julian day 221). The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
+```{r pred-situk-2001-global-missfill, fig.cap="Predicted cumulative escapements by year for the Situk River using the EM algorithm. Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir. This is the hard date (approximately 9 August or Julian day 221). The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
 knitr::include_graphics(here("figs/situk/1988_2021/global_missfill/pred_plot_2010year.png"))
 ```
 
-```{r pred-koot-cumsums, fig.cap="A. Raw and fitted cumulative sums of the weir counts by year. B. Difference between the raw and fitted cumulative sums of the weir counts by year. The difference between the raw and fitted cumulative sums is the interpolated missing escapement counts."}
+```{r pred-situk-cumsums-global-missfill, fig.cap="A. Raw and fitted cumulative sums of the weir counts by year using the EM algorithm. B. Difference between the raw and fitted cumulative sums of the weir counts by year. The difference between the raw and fitted cumulative sums is the interpolated missing escapement counts."}
 knitr::include_graphics(here("figs/situk/1988_2021/global_missfill/fitted_plot.png"))
 ```
 
-```{r ten-year-plot, fig.cap="Predicted cumulative escapements by year for the Situk River based on the last ten years of the time series (2012-2021). Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir (based on the most recent 10 years of data). This is the hard date (approximately 9 August or Julian day 221). The circles are the cumulative escapement data and the lines are the predicted cumulative escapement"}
-knitr::include_graphics(here("figs/situk/2012_2021/global_missfill/pred_plot.png"))
-```
-
-```{r chance-koot-ten-year, results = 'asis'}
-tbls_situk_ten_years$remove_dates_run_caught %>% 
-   knitr::kable(format = 'pandoc', caption = 'The percent of the escapement that is caught at a given risk level (% chance) based upon the number of days the 1% rule is implemented for the Situk River. Predicted cumulative escapements by year for the Situk River based on the last ten years of the time series (2012-2021).')
-```
-
-```{r remove-koot-ten-year, results = 'asis'}
-tbls_situk_ten_years$remove_dates_median_end %>% 
-   knitr::kable(format = 'pandoc', caption = 'Median and maximum end dates for weir removal based upon number of days to implement the 1% rule for the Situk River based on the last ten years of data in the time series (2012-2021).')
-```

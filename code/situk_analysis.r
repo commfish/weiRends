@@ -6,9 +6,10 @@
 # last updated by SEM: January 5, 2022
 # Notes:
 # 1. calculate end date of weir deployment
-# 2. model tails of the runs, by year - Gompertz or logistic model or Missfill
+# 2. model tails of the runs, by year - Gompertz or logistic model or global missfill
 # 3. estimate the date required to operate through so that 95% of the escapement on average is observed
 # 4. weir 1% rule - based upon 5,4, 3, or 2 days meeting the 1% requirement
+# 5. Use wither the whole dataset or a subset (e.g. last ten years of data for the analysis)
 
 # load ----
 source('code/helper.r')
@@ -20,8 +21,8 @@ folder <- 'situk'
 # data inputs are date (mm/dd/yyyy) and weir count
 read_csv('data/situk_weir_1988-2021.csv') %>% 
   filter(species=='Sockeye') %>% 
-  dplyr::select(date, count) -> situk
-year_num <-2012# years to include in run_through (years >= to year_num)
+  #filter(year>2011) %>% # subset data for only the last ten years
+  dplyr::select(date, count)-> situk
 # run functions ----
 
 # format data
@@ -93,11 +94,12 @@ f_risk_plot(preds, remove_dates) # remove_dates_risk_plot.png
 # median, 25% and 75% quantiles of weir end date
 f_median_end_date(remove_dates)
 
-# save the ouputs from above in the appropriate folder before running the code below
+# save the outputs from above in the appropriate folder before running the code below
 
 ## global function implementation ##-----------------------------------------------------------------------------------------------------
 read_csv('data/situk_weir_1988-2021.csv') %>% 
   filter(species=='Sockeye') %>% 
+  filter(year>2011) %>% # subset data for only the last ten years
   dplyr::select(date, count) -> situk
 year_num <-1988 # years to include in run_through (years >= to year_num)
 # run functions ----

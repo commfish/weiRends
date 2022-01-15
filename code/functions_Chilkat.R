@@ -465,9 +465,9 @@ f_remove_dates <- function(preds, run_through){
            four = ifelse(one_4_rule==1 & one_3_rule==1 & one_2_rule==1 & one_1_rule==1, 1,0),
            three = ifelse(one_3_rule==1 & one_2_rule==1 & one_1_rule==1, 1,0),
            two = ifelse(one_2_rule==1 & one_1_rule==1, 1,0),
-           one = ifelse(one_1_rule==1, 1,0)) %>% # if all < 1%, then give it a 1
+           one = ifelse(one_1_rule==1, 1,0))%>% # if all < 1%, then give it a 1
     dplyr::select(year, julian, five, four, three, two, one) %>% 
-    gather(days, value, -year, -julian) %>%  
+    gather(days, value, -year, -julian)->x %>%  
     filter(julian >= run_through, value==1) %>% 
     left_join(yrs, .) %>% 
     mutate(julian = ifelse(is.na(julian) | julian < run_through, run_through, julian)) %>% 

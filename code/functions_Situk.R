@@ -210,14 +210,13 @@ f_run_through <- function(preds, perc = 0.95, prob = 0.95){ #change perc to 0.90
 
   preds %>% 
     group_by(year) %>%
-    filter(year>=year_num) %>% # only use the last 10 years of data
     filter(fit_cumsum <= perc * max(fit_cumsum)) %>% # 95th percentile of last 10 years
     summarise(run_95 = max(julian)) %>% 
     ungroup %>%
-    summarise(end_date = round(quantile(run_95, prob),0)) %>% 
+    summarise(hard_date = round(quantile(run_95, prob),0)) %>% 
     ungroup() %>%
     as.data.frame() %>%
-    mutate(date = as.Date(strptime(paste(year(Sys.Date()), end_date, sep='-'), "%Y-%j"))) %T>% 
+    mutate(date = as.Date(strptime(paste(year(Sys.Date()), hard_date, sep='-'), "%Y-%j"))) %T>% 
     write_csv(., paste0('output/', folder, '/run_through.csv'))
   
 }
@@ -227,7 +226,7 @@ f_run_through <- function(preds, perc = 0.95, prob = 0.95){ #change perc to 0.90
 
 
 f_run95 <- function(preds, run_through, perc = 0.95){ #change perc to 0.90 for alt run
-  run_through = run_through$end_date
+  run_through = run_through$hard_date
   
   preds %>%
     group_by(., year) %>%
@@ -237,15 +236,13 @@ f_run95 <- function(preds, run_through, perc = 0.95){ #change perc to 0.90 for a
 }
 
 f_pred_plot <- function(preds, run_through, perc = 0.95){ #change perc to 0.90 for alt run
-  run_through = run_through$end_date
+  run_through = run_through$hard_date
   max = max(preds$fit_cumsum) 
   preds %>%
-    filter(year>=year_num)%>%
     group_by(., year) %>%
     filter(fit_cumsum <= perc * max(fit_cumsum)) %>%
     summarise(run_95 = max(julian)) -> x
   preds %>% 
-    filter(year>=year_num)%>%
     group_by(., year) %>%
     left_join(x, .) %>% 
     mutate(julian95 = ifelse(julian == run_95, fit_cumsum, NA),
@@ -269,7 +266,7 @@ f_pred_plot <- function(preds, run_through, perc = 0.95){ #change perc to 0.90 f
 }
 
 f_pred1999_plot <- function(preds, run_through, perc = 0.95){ #change perc to 0.90 for alt run
-  run_through = run_through$end_date
+  run_through = run_through$hard_date
 
   preds %>%
     group_by(., year) %>%
@@ -302,7 +299,7 @@ f_pred1999_plot <- function(preds, run_through, perc = 0.95){ #change perc to 0.
 }
 
 f_pred2000_plot <- function(preds, run_through){
-  run_through = run_through$end_date
+  run_through = run_through$hard_date
 
   preds %>%
     group_by(., year) %>%
@@ -336,7 +333,7 @@ f_pred2000_plot <- function(preds, run_through){
 }
 
 f_pred2010_plot <- function(preds, run_through){ #change perc to 0.90 for alt run
-  run_through = run_through$end_date
+  run_through = run_through$hard_date
 
   preds %>%
     group_by(., year) %>%
@@ -370,7 +367,7 @@ f_pred2010_plot <- function(preds, run_through){ #change perc to 0.90 for alt ru
 
 
 # f_pred_plot_decade <- function(preds, run_through){
-#   run_through = run_through$end_date
+#   run_through = run_through$hard_date
 # 
 #   preds %>%
 #     group_by(., year) %>%
@@ -403,15 +400,13 @@ f_pred2010_plot <- function(preds, run_through){ #change perc to 0.90 for alt ru
 
 f_remove_dates <- function(preds, run_through){
   # removal date based upon 1% rules
-  run_through = run_through$end_date
+  run_through = run_through$hard_date
   yrs = expand.grid(year = unique(preds$year),
-                    days = c('one', 'two', 'three', 'four', 'five')) %>%
- filter(year>=year_num)
+                    days = c('one', 'two', 'three', 'four', 'five')) 
   
   preds %>%
     dplyr::select(year, julian, fit_run, fit_cumsum) %>% 
     group_by(year) %>% 
-    filter(year>=year_num)%>%
     mutate(one_5 = (lag(fit_run, 5) / (lag(fit_cumsum,6))),
            one_4 = (lag(fit_run, 4) / (lag(fit_cumsum,5))),
            one_3 = (lag(fit_run, 3) / (lag(fit_cumsum,4))),
@@ -428,26 +423,25 @@ f_remove_dates <- function(preds, run_through){
            three = ifelse(one_3_rule==1 & one_2_rule==1 & one_1_rule==1, 1,0),
            two = ifelse(one_2_rule==1 & one_1_rule==1, 1,0),
            one = ifelse(one_1_rule==1, 1,0)) %>% # if all < 1%, then give it a 1
-    dplyr::select(year, julian, five, four, three, two, one) %>% 
+    dplyr::select(year, julian, five, four, three, two, one)%>% 
     gather(days, value, -year, -julian) %>%  
-    filter(julian >= run_through, value==1) %>% 
-    left_join(yrs, .) %>% 
-    mutate(julian = ifelse(is.na(julian) | julian < run_through, run_through, julian)) %>% 
+    filter(julian >= run_through, value==1)%>% 
+    left_join(yrs, .)%>% 
+    #mutate(julian = ifelse(is.na(julian) | julian < run_through, run_through, julian)) %>% 
+    mutate(julian = ifelse(julian < run_through, run_through, julian)) %>% 
     group_by(year, days) %>% 
     summarise(max = min(julian))
   
 }
 f_remove_dates_table <- function(preds, run_through){
   # removal date based upon 1% rules
-  run_through = run_through$end_date
+  run_through = run_through$hard_date
   yrs = expand.grid(year = unique(preds$year),
-                    days = c('one', 'two', 'three', 'four', 'five')) %>%
-    filter(year>=year_num)
+                    days = c('one', 'two', 'three', 'four', 'five')) 
   
   preds %>%
     dplyr::select(year, julian, fit_run, fit_cumsum) %>% 
     group_by(year) %>% 
-    filter(year>=year_num)%>%
     mutate(one_5 = (lag(fit_run, 5) / (lag(fit_cumsum,6))),
            one_4 = (lag(fit_run, 4) / (lag(fit_cumsum,5))),
            one_3 = (lag(fit_run, 3) / (lag(fit_cumsum,4))),
@@ -467,8 +461,8 @@ f_remove_dates_table <- function(preds, run_through){
     dplyr::select(year, julian, five, four, three, two, one) %>% 
     gather(days, value, -year, -julian) %>%  
     filter(julian >= run_through, value==1) %>% 
-    left_join(yrs, .) %>% 
-    mutate(julian = ifelse(is.na(julian) | julian < run_through, run_through, julian)) %>% 
+    left_join(yrs, .)%>% 
+    mutate(julian = ifelse(julian < run_through, run_through, julian)) %>% 
     group_by(year, days) %>% 
     summarise(max = min(julian)) %>% 
     write_csv(., paste0('output/', folder, '/remove_dates_table.csv'))
@@ -476,7 +470,7 @@ f_remove_dates_table <- function(preds, run_through){
 }
 # f_remove_dates_05 <- function(preds, run_through){
 #   # removal date based upon 0.05% rules
-#   run_through = run_through$end_date
+#   run_through = run_through$hard_date
 #   
 #   yrs = expand.grid(year = unique(preds$year),
 #                     days = c('one', 'two', 'three', 'four', 'five')) 
@@ -511,11 +505,11 @@ f_remove_dates_table <- function(preds, run_through){
 # } 
 # need to work on this function and next
 f_percent_missed <- function(preds, remove_dates){
-  
+  yrs = expand.grid(year = unique(preds$year),
+                                        days = c('one', 'two', 'three', 'four', 'five')) 
   y = deparse(substitute(remove_dates))
   
   preds %>% 
-    filter(year>=year_num)%>% 
     dplyr::select(julian, year, fit_run, fit_cumsum) %>% 
     left_join(remove_dates) %>% 
     group_by(year) %>% 
@@ -524,6 +518,7 @@ f_percent_missed <- function(preds, remove_dates){
     group_by(days, year) %>% 
     summarise(diff = (1 - (sum(fit_run) / mean(max_cumsum)))) %>% 
     group_by(days) %>% 
+    left_join(yrs, .) %>% # join years so NA when no percent missed
     write_csv(., paste0('output/', folder, '/percent_missed.csv')) }
 
 f_run_caught <- function(preds, remove_dates){
@@ -531,7 +526,6 @@ f_run_caught <- function(preds, remove_dates){
   y = deparse(substitute(remove_dates))
   
   preds %>% 
-    filter(year>=year_num)%>% 
     dplyr::select(julian, year, fit_run, fit_cumsum) %>% 
     left_join(remove_dates) %>% 
     group_by(year) %>% 
@@ -564,7 +558,6 @@ f_risk_plot <- function(preds, remove_dates){
   z = ifelse(y =='remove_dates', '1% rule', '0.05% rule')
     
   preds %>% 
-    filter(year>=year_num)%>% 
     left_join(remove_dates) %>% 
     group_by(days, year) %>% 
     mutate(sum_fit = sum(fit_run)) %>% 
@@ -596,10 +589,11 @@ f_risk_plot <- function(preds, remove_dates){
   
 }
 
-f_median_end_date <- function(remove_dates, low = .25, high = .75){
+f_median_hard_date <- function(remove_dates, low = .25, high = .75){
   y = deparse(substitute(remove_dates))
   
   remove_dates %>% 
+    na.omit() %>% # remove rows with NAs
     mutate(days = factor(days, levels = c('one', 'two', 'three', 'four', 'five'))) %>% 
     group_by(days) %>% 
     summarise(median = median(max),
