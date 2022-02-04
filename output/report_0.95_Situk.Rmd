@@ -1,14 +1,13 @@
 ---
-title: "1% Weir Escapement Rule" 
-subtitle: "Situk River Sockeye Salmon"
+title: "1% Weir Escapement Rule"
 author: "Sara Miller and Steve Heinl"
 date: "February 3, 2022"
 output:
-  bookdown::pdf_document2:
+   bookdown::pdf_document2:
     fig_caption: yes
     toc: yes
-header-includes:
- \usepackage{float}
+subtitle: Situk River Sockeye Salmon
+header-includes: \usepackage{float}
 ---
 
 ```{r setup, echo = FALSE}
@@ -101,6 +100,7 @@ A third method was used to reconstruct escapement using observed historical data
 knitr::include_graphics(here("figs/situk/1988_2021/global_missfill/pred_plot.png"))
 ```
 
+# Results
 ## 1% Rule (*Hard Date* and *End Date*)  
 
 ### Gompertz Model
@@ -121,7 +121,7 @@ tbls_situk_gompertz$remove_dates_median_end %>%
 ### EM Algorithm
 Using all the data in the time series (1988–2021), the 95th percentile date when 95% of the escapement has passed the weir is  Julian day `r tbls_situk_global_missfill$run_through$hard_date` or 9 August (the hard date). The earliest date the project can end is Julian day 222 or 10 August (Julian day `r tbls_situk_global_missfill$run_through$hard_date` plus one day). Based upon these dates, there is a 95% chance of capturing roughly 95% of the total escapement for the 3-day weir removal rule (number of days; Table \@ref(tab:chance-situk-global-missfill)). In addition, there is a 50% chance of capturing almost 100% of the escapement for the 3-day weir removal rule. 
 
-The projected median date that the project would end is Julian day 229 (approximately 17 Augus; end date) for the  3-day weir removal rule (Table \@ref(tab:remove-situk-global-missfill)). The project end date was based on the entire time series and estimates of when the weir would have been removed had the 1% rule been used to manage weir operations. The maximum date of weir removal was Julian day 229 (approximately 17 August) using the 3-day 1% rule, Julian day 230 (approximately 18 August) using the 4-day 1% rule, and Julian day 231 (approximately 19 August) using the 5-day 1% rule (Table \@ref(tab:remove-situk-global-missfill)).
+The projected median date that the project would end is Julian day 229 (approximately 17 August; end date) for the  3-day weir removal rule (Table \@ref(tab:remove-situk-global-missfill)). The project end date was based on the entire time series and estimates of when the weir would have been removed had the 1% rule been used to manage weir operations. The maximum date of weir removal was Julian day 229 (approximately 17 August) using the 3-day 1% rule, Julian day 230 (approximately 18 August) using the 4-day 1% rule, and Julian day 231 (approximately 19 August) using the 5-day 1% rule (Table \@ref(tab:remove-situk-global-missfill)).
 
 \pagebreak
 

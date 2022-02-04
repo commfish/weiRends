@@ -67,8 +67,8 @@ f_preds(df, model_gompertz) -> preds #preds.csv
 f_table_output(preds) # total count of raw versus fitted; summary_table.csv
 
 # plot of data cumsum (raw data) and fit_cumsum
-tickryr <- data.frame(year = 2010:2025)# may need to adjust based on year_num
-axisf <- tickr(tickryr, year, 1)
+tickryr <- data.frame(year = 1970:2025)# may need to adjust based on year_num
+axisf <- tickr(tickryr, year, 5)
 f_plot_output_chilkat(preds) # fitted_plot.png
 
 # what is the minimum day that the weir should be in place?

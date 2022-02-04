@@ -2,9 +2,9 @@
 title: "1% Weir Escapement Rule" 
 subtitle: "Chilkat Lake Sockeye Salmon"
 author: "Sara Miller and Steve Heinl"
-date: "December 6, 2021"
+date: "February 3, 2021"
 output:
-  bookdown::word_document2:
+  bookdown::pdf_document2:
     fig_caption: yes
     toc: yes
 header-includes:
@@ -24,31 +24,40 @@ library(knitr)
 ```
 
 ```{r data}
-fs::dir_ls(here::here('output/chilkat/2012_2021'), regexp = "\\.csv$") %>% 
+fs::dir_ls(here::here('output/chilkat/1971_2021/global_missfill'), regexp = "\\.csv$") %>% 
   set_names(nm = (basename(.) %>% 
                     tools::file_path_sans_ext())) %>%
-  map(read_csv) -> tbls_chilkat
-fs::dir_ls(here::here('output/chilkat/1971_2021'), regexp = "\\.csv$") %>% 
+  map(read_csv) -> tbls_chilkat_global_missfill
+fs::dir_ls(here::here('output/chilkat/2012_2021/global_missfill'), regexp = "\\.csv$") %>% 
   set_names(nm = (basename(.) %>% 
                     tools::file_path_sans_ext())) %>%
-  map(read_csv) -> tbls_chilkat_all_data
+  map(read_csv) -> tbls_chilkat_ten_years_global_missfill
+fs::dir_ls(here::here('output/chilkat/1971_2021/gompertz'), regexp = "\\.csv$") %>% 
+  set_names(nm = (basename(.) %>% 
+                    tools::file_path_sans_ext())) %>%
+  map(read_csv) -> tbls_chilkat_gompertz
+fs::dir_ls(here::here('output/chilkat/2012_2021/gompertz'), regexp = "\\.csv$") %>% 
+  set_names(nm = (basename(.) %>% 
+                    tools::file_path_sans_ext())) %>%
+  map(read_csv) -> tbls_chilkat_ten_years_gompertz
+
 ```
 
 
 # Background
-The objectives of this analysis were to:  
+There were two objectives in this study.
 
-  1.  Model the tails of the escapement to quantify the date to which the weir would be required to be operated through (e.g., would capture 95% of the escapement with 95% probability; the hard date). The earliest date a project can end is the day after the hard date. 
+  1. The first objective was to quantify the date to which the weir would be required to be operated through (e.g., would capture 95% of the escapement with 95% probability; the hard date). The earliest date a project can end is the day after the hard date. 
   
-  2. Estimate the percent of counts missed if the project was operated following the $x$-day 1% rule (daily counts equal less than 1% of the cumulative count for $x$ days (1, 2, 3, 4, or 5 days) in a row up to and including the hard date). For example, if the hard date is Julian day 247 and days 243 to 247 are <1% of the cumulative counts for 5 days, then the end date for that year would be Julian day 248.   
+  2. The second objective was to estimate the percent of counts missed if the project was operated following the $x$-day 1% rule (daily counts equal less than 1% of the cumulative count for $x$ days (1, 2, 3, 4, or 5 days) in a row up to and including the hard date). For example, if the hard date is Julian day 247 and days 243 to 247 are <1% of the cumulative counts for 5 days, then the end date for that year would be Julian day 248.   
 
-All associated files, data, and code are located at https://github.com/commfish/weiRends. This work is based upon efforts originally developed by Scott Raborn. The code was originally written by Ben Williams and then adapted by Sara Miller. 
+All associated files, data, and code are located at https://github.com/commfish/weiRends. This work is based upon efforts originally developed by Scott Raborn. The code was originally written by Ben Williams and then adapted by Sara Miller. The code for the EM algorithm was developed by Justin Priest.
 
 
 ## Definitions
-*hard date*: The escapement date that captures 95% of the escapement with 95% probability. The date to which the weir would be required to be operated through. 
+*Hard date*: The escapement date that captures 95% of the escapement with 95% probability. The date to which the weir would be required to be operated through. 
 
-*end date*: The end date is the estimated day the weir project would have ended in the past if the 1% rule had been in place. The end date is expressed as the median date and as a range (end range) of dates (e.g., 25th–75th percentiles or minimum–maximum). The projected end date and end range can be used for planning purposes.  
+*End date* (i.e., expressed as median date): The end date is the estimated day the weir project would have ended in the past if the 1% rule had been in place. The end date is expressed as the median date and as a range (end range) of dates (e.g., 25th–75th percentiles or minimum–maximum). The projected end date and end range can be used for planning purposes.  
 
 # Data Inputs
 
@@ -62,95 +71,108 @@ This is for a single species at a single weir.
 No other values or comments should be included in the file. 
 Data should be provided in .csv format. 
 
-# Analysis
-Two models were considered: 
+# Methods
+Three methods were used to estimate tails of the weir passage when weir operations did not capture the entire escapement particularly the end of the escapement; Gompertz model, logistic model, and the Expectation Maximization (EM) algorithm. 
 
-The Gompertz model 
+## Gompertz and logistic models
+Two models were considered first:
+
+the Gompertz model 
 $$p\mathrm{e}^{{-e}^{-k(t-t_0)}},$$ 
 and the logistic model 
 $$\frac{p}{\mathrm{1+e}^{-k(t-t_0)}}.$$ 
-The variable *p* represents the asymptote of the cumulative escapement, *k* is the steepness of the curve, and *t*~0~ is the inflection point of the curve. 
+The variable *p* represents the asymptote of the cumulative escapement, *k* is the steepness of the curve, and *t*~0~ is the inflection point of the curve. These models were used in 1% rule analysis for Bristol Bay and Upper Cook Inlet salmon stocks (Scott Raborn, pers. comm.). 
 
-The evaluation process starts by fitting both models, and then the model with the least total variance is chosen for the analysis. 
-*Note that this is a coarse approach and is not a meaningful model comparison*.
-Cumulative escapement is predicted from the selected model and then this is converted into the number of estimated fish past the weir for a given day.
-A reconstructed escapement is estimated using observed daily data, filling in any data gaps with estimated daily escapement numbers. 
-This reconstructed escapement is then used to compute a cumulative sum of escapement. 
-The date that a weir should remain in place to capture the 95th percentile of 95% of the escapement is calculated using the reconstructed cumulative sums. Based on the model deviance, the Gompertz model provided an overall better fit to the data than the logistic model. The models converged for all years, and year 2014 was the only year that had large error bars (Figure \@ref(fig:param-koot)) for parameters $p$ and $t$.
+The evaluation process starts by fitting both models to the cumulative sum of the weir counts, and then the model with the least total variance (i.e., smallest deviance; residual sum of squares of the model) is chosen for the analysis. For each year modeled, the Gompertz model and logistic model are compared to determine the model with the lowest deviance. The model with a greater percentage of the modeled years (each year is modeled separately) with a lower deviance becomes the chosen model. For example, 25 of the 48 modeled years (52%) using the Gompertz model had a lower deviance than the logistic model. Therefore, the Gompertz model was the model used in the Chilkat Lake analysis. Cumulative escapement is predicted from the selected model and then this is converted into the number of estimated fish past the weir for a given day. A reconstructed escapement is estimated using observed daily data, filling in any data gaps with estimated daily escapement numbers. This reconstructed escapement is then used to compute a cumulative sum of escapement. The date that a weir should remain in place to capture the 95th percentile of 95% of the escapement is calculated using the reconstructed cumulative sums. Based on the model deviance, the Gompertz model provided an overall better fit to the data than the logistic model. None of the parameter estimates had substantial error bars (Figure \@ref(fig:param-chilkat-ten-years-gompertz)) and the models converged for all years. Reconstructed escapements are shown in Figure \@ref(fig:pred-chilkat-ten-years-gompertz).
 
-```{r param-koot, fig.cap="Parameter estimates from the Gompertz model for Chilkat Lake sockeye salmon (2012-2021)."}
-knitr::include_graphics(here("figs/chilkat/2012_2021/param_plot.png"))
+```{r param-chilkat-ten-years-gompertz, fig.cap="Parameter estimates from the Gompertz model for Chilkat Lake sockeye salmon (2012-2021)."}
+knitr::include_graphics(here("figs/chilkat/2012_2021/gompertz/param_plot.png"))
 ```
 
-```{r pred-koot, fig.cap="Predicted cumulative escapements by year for the Chilkat Lake. Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir. This is the hard date. The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
-knitr::include_graphics(here("figs/chilkat/2012_2021/pred_plot.png"))
+```{r pred-chilkat-ten-years-gompertz, fig.cap="Predicted cumulative escapements by year for Chilkat Lake sockeye salmon using the Gompertz model (2012-2021). Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir. This is the hard date (approximately 12 October or Julian day 285). The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
+knitr::include_graphics(here("figs/chilkat/2012_2021/gompertz/pred_plot.png"))
 ```
 
+## Expectation-maximization (EM) algorithm
+A third method was used to reconstruct escapement using observed historical data to fill data gaps with estimated daily escapement numbers using an iterative procedure (EM algorithm; McLachlan and Krishnan 1997). Missing values of the escapement were filled in under the assumption that the expected count is determined by a given year and Julian day in a multiplicative way. The estimated count for a given Julian day in a given year is equal to the sum of all counts for the particular Julian day times the sum of all counts for the year divided by the sum of all counts over all Julian days and years. If there is more than one missing value, an iterative procedure (as described in Brown 1974) is used since the sums change as missing values are filled in at each step. Reconstructed escapement is then used to compute a cumulative sum of escapement. The date that a weir should remain in place to capture the 95th percentile of 95% of the escapement is calculated using the reconstructed cumulative sums. This method requires observed data as late as possible into the season. Reconstructed escapements are shown in Figure \@ref(fig:pred-chilkat).
 
+```{r pred-chilkat, fig.cap="Predicted cumulative sockeye salmon escapements, by year, for the Chilkat Lake using an EM Algorithm (1971-2021). Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir. This is the hard date (approximately 15 October or Julian day 288). The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
+knitr::include_graphics(here("figs/chilkat/1971_2021/global_missfill/pred_plot.png"))
+```
+# Results
 ## 1% Rule (*Hard Date* and *End Date*)
-Using the last ten years of the time series (2012-2021), the 95th percentile date when 95% of the escapement has passed the weir  is Julian day `r tbls_chilkat$run_through$end_date` or `r tbls_chilkat$run_through$date` (the hard date). The earliest date the project can end is is Julian day 319 or 15 November (Julian day `r tbls_chilkat$run_through$end_date` plus one day; end date). Based upon these dates, there is a 95% chance of capturing roughly 95% of the total escapement for all weir removal rules (number of days; Table \@ref(tab:chance-koot)). In addition, there is a 50% chance of capturing about 97% of the escapement. This is also reflected in the percent risk as well (Figure \@ref(fig:risk-koot)); Figure \@ref(fig:risk-koot) reflects the inverse of Table \@ref(tab:chance-koot). For example, a 99% chance is the same as a 1% risk. About 5%  of the escapement is missed (i.e., 95% caught) at a given risk level (99% chance or 1% risk level) based on implementing a 5-day 1% rule. 
 
-The projected median date that the project would end is Julian day 319 (15 November) for all weir removal rules (Table \@ref(tab:remove-koot)). The project end date was based on the last ten years of the time series (2012-2021) and estimates of when the weir would have been removed had the 1% rule been used to manage weir operations. The maximum date of weir removal is Julian day 319 (15 November) using the 5-day, 4- day, and 3-day 1% rule (Table \@ref(tab:remove-koot)). 
+### Gompertz Model (2012-2021)
+Using the last ten years of the time series (2012-2021), the 95th percentile date when 95% of the escapement has passed the weir  is Julian day `r tbls_chilkat_ten_years_gompertz$run_through$hard_date` or approximately 12 October (the hard date). The earliest date the project can end is is Julian day 286 or approximately 13 October (Julian day `r tbls_chilkat_ten_years_gompertz$run_through$hard_date` plus one day). Based upon these dates, there is a 95% chance of capturing roughly 95% of the total escapement for all weir removal rules (number of days; Table \@ref(tab:chance-chilkat-ten-years-gompertz)). In addition, there is a 50% chance of capturing about 97% of the escapement for the 3-day rule (number of days; Table \@ref(tab:chance-chilkat-ten-years-gompertz)). 
 
-If the entire time series (1971-2021) is used for the analysis, results varied slightly; the end date is extended by 3 days (see Appendix Table \@ref(tab:chance-koot-all); Table \@ref(tab:remove-koot-all); Figure \@ref(fig:all-year-plot)). Based on the model deviance, the Gompertz model provided an overall better fit to the data than the logistic model. The models converged for all years, but year 2003 had substantial error bars (Figure \@ref(fig:param-koot-all)) for parameters $p$ and $t$. If the entire time series is used, the year 2003 needs to be investigated further and may need to be removed as an outlier. Using the entire time series, the 95th percentile date when 95% of the escapement has passed the weir  is Julian day `r tbls_chilkat_all_data$run_through$end_date` or `r tbls_chilkat_all_data$run_through$date` (the hard date). The earliest date the project can end is is Julian day 322 or 18 November (Julian day `r tbls_chilkat_all_data$run_through$end_date` plus one day; end date).  
+The projected median end date that the project would end is Julian day 286 (approximately 13 October) for all weir removal rules (Table \@ref(tab:remove-chilkat-ten-years-gompertz)). The project median end date was based on the last ten years of the time series (2012-2021) and estimates of when the weir would have been removed had the 1% rule been used to manage weir operations. The maximum date of weir removal is Julian day 287 (approximately 14 October) using the 3-day 1% rule (Table \@ref(tab:remove-chilkat-ten-years-gompertz)). 
 
-```{r chance-koot, results = 'asis'}
-tbls_chilkat$remove_dates_run_caught %>% 
-   knitr::kable(format = 'pandoc', caption = 'The percent of the escapement that is caught at a given risk level (% chance) based upon the number of days the 1% rule is implemented for the Chilkat Lake.')
+```{r chance-chilkat-ten-years-gompertz, results = 'asis'}
+tbls_chilkat_ten_years_gompertz$remove_dates_run_caught %>% 
+   knitr::kable(format = 'pandoc', caption = 'The percent of the escapement that is observed at a given risk level (% chance) based upon the number of days the 1% rule is implemented for the Chilkat Lake sockeye salmon based on the Gompertz model (2012-2021).')
 ```
 
-
-```{r remove-koot, results = 'asis'}
-tbls_chilkat$remove_dates_median_end %>% 
-   knitr::kable(format = 'pandoc', caption = 'Median and maximum end dates for weir removal based upon number of days to implement the 1% rule for the Chilkat Lake.')
+```{r remove-chilkat-ten-years-gompertz, results = 'asis'}
+tbls_chilkat_ten_years_gompertz$remove_dates_median_end %>% 
+   knitr::kable(format = 'pandoc', caption = 'Median and maximum end dates for weir removal based upon number of days to implement the 1% rule for the Chilkat Lake sockeye salmon based on the Gompertz model (2012-2021).')
 ```
 
+### Gompertz Model (1971-2021)
+If the entire time series (1971-2021) is used for the analysis, the hard date is extended by 36 days (see Appendix A Table \@ref(tab:chance-chilkat-gompertz); Table \@ref(tab:remove-chilkat-gompertz); Figures \@ref(fig:pred-chilkat-1990-gompertz) to \@ref(fig:param-chilkat-gompertz)); the 95th percentile date when 95% of the escapement has passed the weir is Julian day `r tbls_chilkat_gompertz$run_through$hard_date` or approximately 17 November (the hard date). The earliest date the project can end is is Julian day 322 or 18 November (Julian day `r tbls_chilkat_gompertz$run_through$hard_date` plus one day). The projected median end date that the project would end, based on the entire time series, is Julian day 322 (approximately 18 November) for all weir removal rules (Table \@ref(tab:remove-chilkat-gompertz)). Based on the Gompertz model, year 2003 had substantial error bars (Figure \@ref(fig:param-chilkat-gompertz)) for parameters $p$ and $t$. If the entire time series is used, the year 2003 needs to be investigated further and may need to be removed as an outlier.
 
-```{r risk-koot, fig.cap="The percent of the escapement that will be missed at a given risk level, e.g., about 5\\% of the escapement will be missed 5\\% of the time using a 5-day 1\\% rule for the Chilkat Lake."}
-knitr::include_graphics(here("figs/chilkat/2012_2021/remove_dates_risk_plot.png"))
-```
+
+
+### EM Algorithm
+# Discussion
+Based on the raw counts, in the early years of weir operations, weir counts extended to Julian day 324 in 1987 (20 November), Julian day 319 in 1988, Julian day 318 in 1986, Julian day 317 in 1990, Julian day 316 in 1983 and Julian day 315 in 1979. 
 
 # Conclusions
-  1. The hard date, the date to which the weir must be operated through, is Julian day `r tbls_chilkat$run_through$end_date` or `r tbls_chilkat$run_through$date`. 
+  1. The hard date, the date to which the weir must be operated through, is Julian day  or 
   
   3. Based upon the median weir removal date (end date; Julian day 319 or 15 November), using the number of days to implement the 1% rule for the Chilkat Lake, there is a 95% chance of capturing about 95% of the total escapement for the 5-day rule. 
   
-# Appendix
-## Analysis using the entire time series (1971-2021)
-```{r pred-koot-1990, fig.cap="Predicted cumulative escapements by year for Chilkat Lake. Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir. This is the hard date. The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
-knitr::include_graphics(here("figs/chilkat/1971_2021/pred_plot_1999year.png"))
+# References
+Brown, M. B. 1974. Identification of sources of significance in two-way contingency tables. Applied statistics 23:405-413. 
+
+McLachlan, G. J. and T. Krishnan. 1997. The EM algorithm and extensions. John Wiley and Sons. New York.
+  
+# Appendix A - Gompertz Model (1971-2021)
+```{r pred-chilkat-1990-gompertz, fig.cap="Predicted cumulative escapements by year for Chilkat Lake sockeye salmon based on the Gompertz model (1971-2021). Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir. This is the hard date (approximately 17 November or Julian day 321). The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
+knitr::include_graphics(here("figs/chilkat/1971_2021/gompertz/pred_plot_1999year.png"))
 ```
 
-```{r pred-koot-1991, fig.cap="Predicted cumulative escapements by year for Chilkat Lake. Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir. This is the hard date. The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
-knitr::include_graphics(here("figs/chilkat/1971_2021/pred_plot_2000year.png"))
+```{r pred-chilkat-1991-gompertz, fig.cap="Predicted cumulative escapements by year for Chilkat Lake sockeye salmon based on the Gompertz model (1971-2021). Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir. This is the hard date (approximately 17 November or Julian day 321). The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
+knitr::include_graphics(here("figs/chilkat/1971_2021/gompertz/pred_plot_2000year.png"))
 ```
 
-```{r pred-koot-2001, fig.cap="Predicted cumulative escapements by year for Chilkat Lake. Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir. This is the hard date. The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
-knitr::include_graphics(here("figs/chilkat/1971_2021/pred_plot_2010year.png"))
+```{r pred-chilkat-2001-gompertz, fig.cap="Predicted cumulative escapements by year for Chilkat Lake sockeye salmon based on the Gompertz model (1971-2021). Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir. This is the hard date (approximately 17 November or Julian day 321). The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
+knitr::include_graphics(here("figs/chilkat/1971_2021/gompertz/pred_plot_2010year.png"))
 ```
 
-```{r pred-koot-2021, fig.cap="Predicted cumulative escapements by year for Chilkat Lake. Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir. This is the hard date. The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
-knitr::include_graphics(here("figs/chilkat/1971_2021/pred_plot_2015year.png"))
+```{r pred-chilkat-2021-gompertz, fig.cap="Predicted cumulative escapements by year for Chilkat Lake sockeye salmon based on the Gompertz model (1971-2021). Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir. This is the hard date (approximately 17 November or Julian day 321). The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
+knitr::include_graphics(here("figs/chilkat/1971_2021/gompertz/pred_plot_2015year.png"))
 ```
 
-```{r pred-koot-cumsums, fig.cap="A. Raw and fitted cumulative sums of the weir counts by year, based on the Gompertz model. B. Difference between the raw and fitted cumulative sums of the weir counts by year. The difference between the raw and fitted cumulative sums is the modeled tails."}
-knitr::include_graphics(here("figs/chilkat/1971_2021/fitted_plot.png"))
+```{r pred-chilkat-cumsums-gompertz, fig.cap="A. Raw and fitted cumulative sums of the weir counts by year (1971-2021), based on the Gompertz model. B. Difference between the raw and fitted cumulative sums of the weir counts by year. The difference between the raw and fitted cumulative sums is the modeled tails."}
+knitr::include_graphics(here("figs/chilkat/1971_2021/gompertz/fitted_plot.png"))
 ```
 
-```{r all-year-plot, fig.cap="Predicted cumulative escapements by year for the Chilkat Lake based on the entire time series (1971-2021). Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir. This is the hard date. The circles are the cumulative escapement data and the lines are the predicted cumulative escapement"}
-knitr::include_graphics(here("figs/chilkat/1971_2021/pred_plot.png"))
+```{r pred-chilkat-gompertz, fig.cap="Predicted cumulative escapements by year for Chilkat Lake sockeye salmon based on the Gompertz model (1971-2021). Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir. This is the hard date (approximately 17 November or Julian day 321). The circles are the cumulative escapement data and the lines are the predicted cumulative escapement"}
+knitr::include_graphics(here("figs/chilkat/1971_2021/gompertz/pred_plot.png"))
 ```
 
-```{r chance-koot-all, results = 'asis'}
-tbls_chilkat_all_data$remove_dates_run_caught %>% 
-   knitr::kable(format = 'pandoc', caption = 'The percent of the escapement that is caught at a given risk level (% chance) based upon the number of days the 1% rule is implemented for the Chilkat Lake based on the entire time series (1971-2021).')
+```{r chance-chilkat-gompertz, results = 'asis'}
+tbls_chilkat_gompertz$remove_dates_run_caught %>% 
+   knitr::kable(format = 'pandoc', caption = 'The percent of the escapement that is observed at a given risk level (% chance) based upon the number of days the 1% rule is implemented for Chilkat Lake sockeye salmon based on the Gompertz model (1971-2021).')
 ```
 
-```{r remove-koot-all, results = 'asis'}
-tbls_chilkat_all_data$remove_dates_median_end %>% 
-   knitr::kable(format = 'pandoc', caption = 'Median and maximum end dates for weir removal based upon number of days to implement the 1% rule for the Chilkat Lake based on the entire time series (1971-2021).')
+```{r remove-chilkat-gompertz, results = 'asis'}
+tbls_chilkat_gompertz$remove_dates_median_end %>% 
+   knitr::kable(format = 'pandoc', caption = 'Median and maximum end dates for weir removal based upon number of days to implement the 1% rule for the Chilkat Lake based on the Gompertz model (1971-2021).')
 ```
 
-```{r param-koot-all, fig.cap="Parameter estimates from the Gompertz model for Chilkat Lake sockeye salmon (1971-2021). The year 2003 has substantial error bars for parameters p and t."}
-knitr::include_graphics(here("figs/chilkat/1971_2021/param_plot.png"))
+```{r param-chilkat-gompertz, fig.cap="Parameter estimates from the Gompertz model for Chilkat Lake sockeye salmon (1971-2021). The year 2003 has substantial error bars for parameters p and t."}
+knitr::include_graphics(here("figs/chilkat/1971_2021/gompertz/param_plot.png"))
 ```
+
+# Appendix B - 

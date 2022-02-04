@@ -21,7 +21,7 @@ preds %>%
                        breaks = axisf$breaks, labels = axisf$labels) +
     scale_y_continuous(limits = c(0, max * 1.1),
                        labels = scales::comma) +
-    geom_text(aes(x = 1970, y = 240000, label="A)"),family="Times New Roman", colour="black", size=4) +
+    geom_text(aes(x = 1970, y = 350000, label="A)"),family="Times New Roman", colour="black", size=4) +
     theme(legend.position = c(0.85, 0.9), legend.title = element_blank (),
           legend.text=element_text(size=12)) +
     xlab('\nYear') +
@@ -43,7 +43,7 @@ plot1
     theme(legend.position = c(0.15, 0.85)) +
     theme ( legend.title = element_blank ()) +
     xlab('\nYear') +
-    geom_text(aes(x = 1970, y = 30000, label="B)"),family="Times New Roman", colour="black", size=4) +
+    geom_text(aes(x = 1970, y = 200000, label="B)"),family="Times New Roman", colour="black", size=4) +
     ylab('Difference\n') -> plot2
   plot2
   cowplot::plot_grid(plot1, plot2,  align = "v", nrow = 2, ncol=1) 
@@ -52,7 +52,7 @@ plot1
 
 
 f_pred1999_plot_chilkat <- function(preds, run_through, perc = 0.95){ #change perc to 0.90 for alt run
-  run_through = run_through$end_date
+  run_through = run_through$hard_date
 
   preds %>%
     group_by(., year) %>%
