@@ -1,19 +1,22 @@
 f_plot_output_chilkat <- function (preds){ # fitted cumulative sum versus raw and diff by year
   
 max = max(preds$fit_cumsum) 
-  
+yrs = expand.grid(year = min(preds$year):max(preds$year))
+
 preds %>% 
+  right_join(.,yrs) %>%
   group_by(year) %>%
   summarise(count = max(cumsum, na.rm = T),
             value = 'cumulative sum') -> x
   
   preds %>% 
+    right_join(.,yrs)%>%
     group_by(year) %>%
     summarise(count = max(fit_cumsum, na.rm = T),
               value = 'fitted cumulative sum')%>%
-    #mutate(count = ifelse(count == '-Inf', '', count))%>%
-  rbind(.,x) %>%
-    as.data.frame() %>% 
+    rbind(.,x) %>%
+    mutate(count = ifelse(count == '-Inf', NA, as.numeric(count))) %>%
+    as.data.frame()%>%
     ggplot() +
     geom_line(aes(x = year, y = count, group = value, lty = value, color = value)) +
     scale_colour_manual(values = c("grey80", "black")) +
@@ -21,7 +24,7 @@ preds %>%
                        breaks = axisf$breaks, labels = axisf$labels) +
     scale_y_continuous(limits = c(0, max * 1.1),
                        labels = scales::comma) +
-    geom_text(aes(x = 2010, y = 170000, label="A)"),family="Times New Roman", colour="black", size=4) +
+    geom_text(aes(x = 2010, y = 190000, label="A)"),family="Times New Roman", colour="black", size=4) +
     theme(legend.position = c(0.85, 0.9), legend.title = element_blank (),
           legend.text=element_text(size=12)) +
     xlab('\nYear') +
@@ -43,7 +46,7 @@ plot1
     theme(legend.position = c(0.15, 0.85)) +
     theme ( legend.title = element_blank ()) +
     xlab('\nYear') +
-    geom_text(aes(x = 2010, y = 23000, label="B)"),family="Times New Roman", colour="black", size=4) +
+    geom_text(aes(x = 2010, y = 45000, label="B)"),family="Times New Roman", colour="black", size=4) +
     ylab('Difference\n') -> plot2
   plot2
   cowplot::plot_grid(plot1, plot2,  align = "v", nrow = 2, ncol=1) 

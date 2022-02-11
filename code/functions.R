@@ -107,7 +107,7 @@ f_param_plot <- function(params){
     mutate(term = ifelse(term=='pop', 'p', term)) %>% 
     ggplot(aes(Year, Estimate)) +
     geom_point(alpha = .2) +
-    geom_line(alpha = 0.5) +
+    #geom_line(alpha = 0.5) +
     geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.3) +
     facet_wrap(~term, scales = 'free_y') -> x
   print(x)

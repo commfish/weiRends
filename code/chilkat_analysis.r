@@ -22,7 +22,7 @@ folder <- 'chilkat'
 # data inputs are date (mm/dd/yyyy) and weir count
 read_csv('data/chilkat_weir_1971-2021.csv') %>% 
   filter(species=='Sockeye') %>%
-  #filter(year>2011) %>% # subset data for only the last ten years
+  filter(year>2011) %>% # subset data for only the last ten years
   dplyr::select(date, count) -> chilkat
 
 # run functions ----
@@ -67,7 +67,7 @@ f_preds(df, model_gompertz) -> preds #preds.csv
 f_table_output(preds) # total count of raw versus fitted; summary_table.csv
 
 # plot of data cumsum (raw data) and fit_cumsum
-tickryr <- data.frame(year = 1970:2025)# may need to adjust based on year_num
+tickryr <- data.frame(year = 2010:2025)# may need to adjust based on year_num
 axisf <- tickr(tickryr, year, 5)
 f_plot_output_chilkat(preds) # fitted_plot.png
 
@@ -102,7 +102,7 @@ f_median_hard_date(remove_dates)
 # data inputs are date (mm/dd/yyyy) and weir count
 read_csv('data/chilkat_weir_1971-2021.csv') %>% 
   filter(species=='Sockeye') %>%
-  filter(year>2011) %>% # subset data for only the last ten years
+  #filter(year>2011) %>% # subset data for only the last ten years
   dplyr::select(date, count) -> chilkat
 
 # run functions ----
@@ -137,8 +137,8 @@ f_table_output(preds) # total count of raw versus fitted; summary_table.csv
 
 
 # plot of data cumsum (raw data) and fit_cumsum
-tickryr <- data.frame(year = 2010:2025) # may need to adjust based on year_num
-axisf <- tickr(tickryr, year, 1)
+tickryr <- data.frame(year = 1970:2025) # may need to adjust based on year_num
+axisf <- tickr(tickryr, year, 5)
 f_plot_output_chilkat(preds) # fitted_plot.png
 
 # what is the minimum day that the weir should be in place?
