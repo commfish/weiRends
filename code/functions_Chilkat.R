@@ -24,7 +24,7 @@ preds %>%
                        breaks = axisf$breaks, labels = axisf$labels) +
     scale_y_continuous(limits = c(0, max * 1.1),
                        labels = scales::comma) +
-    geom_text(aes(x = 2010, y = 190000, label="A)"),family="Times New Roman", colour="black", size=4) +
+    geom_text(aes(x = 2010, y = 170000, label="A)"),family="Times New Roman", colour="black", size=4) +
     theme(legend.position = c(0.85, 0.9), legend.title = element_blank (),
           legend.text=element_text(size=12)) +
     xlab('\nYear') +
@@ -46,7 +46,7 @@ plot1
     theme(legend.position = c(0.15, 0.85)) +
     theme ( legend.title = element_blank ()) +
     xlab('\nYear') +
-    geom_text(aes(x = 2010, y = 45000, label="B)"),family="Times New Roman", colour="black", size=4) +
+    geom_text(aes(x = 2010, y = 30000, label="B)"),family="Times New Roman", colour="black", size=4) +
     ylab('Difference\n') -> plot2
   plot2
   cowplot::plot_grid(plot1, plot2,  align = "v", nrow = 2, ncol=1) 
