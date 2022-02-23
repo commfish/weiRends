@@ -102,7 +102,6 @@ f_median_hard_date(remove_dates)
 # data inputs are date (mm/dd/yyyy) and weir count
 read_csv('data/chilkat_weir_1971-2021.csv') %>% 
   filter(species=='Sockeye') %>%
-  #filter(year>2011) %>% # subset data for only the last ten years
   dplyr::select(date, count) -> chilkat
 
 # run functions ----
@@ -110,8 +109,8 @@ read_csv('data/chilkat_weir_1971-2021.csv') %>%
 # format data
 f_clean_data(chilkat) -> df
 df %>% 
-  filter(year>2011) ->df
-  #filter(!year >=1996 | !year <= 1998)-> df # for the analysis, include entire time series (a few years of missing data for the entire year)
+  #filter(year>2011) ->df
+  filter(!year >=1996 | !year <= 1998)-> df # for the analysis, include entire time series (a few years of missing data for the entire year)
 
 df %>%
   mutate (stream_name = julian) %>%
