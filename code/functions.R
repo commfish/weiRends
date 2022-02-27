@@ -240,7 +240,7 @@ f_pred_plot <- function(preds, run_through, perc = 0.95){ #change perc to 0.90 f
 # }
 f_remove_dates <- function(preds, run_through){
   # removal date based upon 1% rules
-  run_through = 284
+  run_through = run_through$hard_date
   yrs = expand.grid(year = unique(preds$year),
                     days = c('one', 'two', 'three', 'four', 'five')) 
   
@@ -274,7 +274,7 @@ f_remove_dates <- function(preds, run_through){
 }
 f_remove_dates_table <- function(preds, run_through){
   # removal date based upon 1% rules
-  run_through = 284
+  run_through = run_through$hard_date
   yrs = expand.grid(year = unique(preds$year),
                     days = c('one', 'two', 'three', 'four', 'five')) 
   
