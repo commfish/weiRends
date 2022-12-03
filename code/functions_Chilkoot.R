@@ -180,8 +180,8 @@ max = max(preds$fit_cumsum)
     geom_text(aes(x = 1975, y = 150000, label="A)"),family="Times New Roman", colour="black", size=4) +
     theme(legend.position = c(0.2, 0.85), legend.title = element_blank (),
           legend.text=element_text(size=12)) +
-    xlab('\nYear') +
-    ylab('Counts\n') -> plot1
+    xlab('Year') +
+    ylab('Counts') -> plot1
   
 plot1  
 
@@ -198,9 +198,9 @@ plot1
     scale_y_continuous(labels = scales::comma) +
     theme(legend.position = c(0.15, 0.85)) +
     theme ( legend.title = element_blank ()) +
-    xlab('\nYear') +
+    xlab('Year') +
     geom_text(aes(x = 1975, y = 11500, label="B)"),family="Times New Roman", colour="black", size=4) +
-    ylab('Difference\n') -> plot2
+    ylab('Difference') -> plot2
   plot2
   cowplot::plot_grid(plot1, plot2,  align = "v", nrow = 2, ncol=1) 
   ggsave(paste0('figs/', folder, "/fitted_plot.png"), dpi = 500, height = 8, width = 9, units = "in")
@@ -251,12 +251,11 @@ f_pred_plot <- function(preds, run_through, perc = 0.95){ #change perc to 0.90 f
     geom_line(aes(alpha = alpha)) +
     geom_point(aes(y = cumsum), alpha = 0.15) +
     geom_point(aes(y = julian95, fill=Year), alpha = 0.90, pch = 21) +
-    scale_y_continuous(limits = c(0, max * 1.1),
-                       labels = scales::comma) +
+    scale_y_continuous(labels = scales::comma) +
     geom_vline(xintercept=run_through, lty = 3) +
     scale_alpha(guide = 'none') +
-    xlab('\nJulian date') +
-    ylab('Cumulative Escapement\n') -> x
+    xlab('Julian date') +
+    ylab('Cumulative Escapement') -> x
   
   ggsave(paste0('figs/', folder, "/pred_plot.png"), plot = x, dpi = 100, 
          height = 5, width = 6.5, units = "in") 
@@ -279,7 +278,7 @@ f_pred1990_plot <- function(preds, run_through, perc = 0.95){ #change perc to 0.
     mutate(julian95 = ifelse(julian == run_95, fit_cumsum, NA),
            alpha = ifelse(julian>run_95, .6, .7),
            decade = year - year %% 1) %>%
-    filter (year < 1991) %>%
+    filter (year < 1992) %>%
     ggplot(aes(julian, fit_cumsum , group = Year)) +
     geom_line(aes(alpha = alpha)) +
     geom_point(aes(y = cumsum ), alpha = 0.1) +
@@ -289,8 +288,8 @@ f_pred1990_plot <- function(preds, run_through, perc = 0.95){ #change perc to 0.
     geom_vline(xintercept=run_through, lty = 3) +
     scale_fill_discrete(guide = 'none') +
     theme(legend.position="none") +
-    xlab('\nJulian date') +
-    ylab('Cumulative Escapement\n') +
+    xlab('Julian date') +
+    ylab('Cumulative Escapement') +
     facet_wrap(~decade, dir = 'v') -> x
   print(x)
 
@@ -312,8 +311,8 @@ f_pred1991_plot <- function(preds, run_through){
     mutate(julian95 = ifelse(julian == run_95, fit_cumsum, NA),
            alpha = ifelse(julian>run_95, 0.6, .7),
            decade = year - year %% 1) %>%
-    filter (year > 1990) %>%
-    filter (year < 2002) %>%
+    filter (year > 1991) %>%
+    filter (year < 2004) %>%
     ggplot(aes(julian, fit_cumsum , group = Year)) +
     geom_line(aes(alpha = alpha)) +
     geom_point(aes(y = cumsum ), alpha = 0.1) +
@@ -323,8 +322,8 @@ f_pred1991_plot <- function(preds, run_through){
     scale_fill_discrete(guide = 'none') +
     geom_vline(xintercept=run_through, lty = 3) +
     theme(legend.position="none") +
-    xlab('\nJulian date') +
-    ylab('Cumulative Escapement\n') +
+    xlab('Julian date') +
+    ylab('Cumulative Escapement') +
     facet_wrap(~decade, dir = 'v') -> x
   print(x)
 
@@ -346,7 +345,7 @@ f_pred2001_plot <- function(preds, run_through){ #change perc to 0.90 for alt ru
     mutate(julian95 = ifelse(julian == run_95, fit_cumsum, NA),
            alpha = ifelse(julian>run_95, 0.6, .7),
            decade = year - year %% 1) %>%
-    filter (year > 2001) %>%
+    filter (year > 2003) %>%
     ggplot(aes(julian, fit_cumsum , group = Year)) +
     geom_line(aes(alpha = alpha)) +
     geom_point(aes(y = cumsum ), alpha = 0.1) +
@@ -356,8 +355,8 @@ f_pred2001_plot <- function(preds, run_through){ #change perc to 0.90 for alt ru
     scale_alpha(guide = 'none') +
     scale_fill_discrete(guide = 'none') +
     theme(legend.position="none") +
-    xlab('\nJulian date') +
-    ylab('Cumulative Escapement\n') +
+    xlab('Julian date') +
+    ylab('Cumulative Escapement') +
     facet_wrap(~decade, dir = 'v') -> x
   print(x)
 
@@ -388,8 +387,8 @@ f_pred2001_plot <- function(preds, run_through){ #change perc to 0.90 for alt ru
 #     geom_vline(xintercept=run_through, lty = 3) +
 #     scale_alpha(guide = 'none') +
 #     scale_fill_discrete(guide = 'none') +
-#     xlab('\nJulian date') +
-#     ylab('Cumulative Escapement\n') +
+#     xlab('Julian date') +
+#     ylab('Cumulative Escapement') +
 #     facet_wrap(~decade, dir = 'v') -> x
 #   print(x)
 # 
@@ -460,8 +459,8 @@ f_remove_dates_table <- function(preds, run_through){
            four = ifelse(one_4_rule==1 & one_3_rule==1 & one_2_rule==1 & one_1_rule==1, 1,0),
            three = ifelse(one_3_rule==1 & one_2_rule==1 & one_1_rule==1, 1,0),
            two = ifelse(one_2_rule==1 & one_1_rule==1, 1,0),
-           one = ifelse(one_1_rule==1, 1,0))->x %>% # if all < 1%, then give it a 1
-    dplyr::select(year, julian, five, four, three, two, one)->x %>% 
+           one = ifelse(one_1_rule==1, 1,0))%>% # if all < 1%, then give it a 1
+    dplyr::select(year, julian, five, four, three, two, one)%>% 
     gather(days, value, -year, -julian) %>%  
     filter(julian >= run_through, value==1) %>% 
     left_join(yrs, .) %>% 

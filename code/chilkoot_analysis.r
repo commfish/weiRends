@@ -1,9 +1,8 @@
 # Weir 1% rule
 # Chilkoot R. analysis
 
-# ben.williams@alaska.gov
-# 2019-03
-# last updated by SEM: October 15, 2021
+# originally coded by ben.williams@alaska.gov March 2019
+# and then improved by updated by Sara Miller (sara.miller@alaska.gov): December 2 2022
 # Notes:
 # 1. calculate end date of weir deployment
 # 2. model tails of the runs, by year - Gompertz or logistic model
@@ -20,11 +19,10 @@ folder <- 'chilkoot'
 # data ----
 # data inputs are date (mm/dd/yyyy) and weir count
 
-#read_csv('data/chilkoot_weir_1976-2018.csv') %>% 
-read_csv('data/chilkoot_weir_1976-2021.csv') %>% 
+read_csv('data/chilkoot_weir_1976-2022.csv') %>% 
   filter(species=='Sockeye') %>% 
   dplyr::select(date, count) -> chilkoot
-year_num <-2012 # years to include in run_through
+year_num <-2013 # years to include in run_through (last 10 years)
 # run functions ----
 
 # format data
@@ -52,7 +50,8 @@ f_summary(model_logistic)
 f_deviance(model_gompertz, model_logistic) # check model fits - did all models converge?
 
 # get parameters
-f_params(model_logistic) -> params # choose model based on deviance
+f_params(model_logistic) -> params # choose model based on deviance above (need to update code if
+# another model becomes the recommended model for this stock)
 
 # plot parameter fits - because why not?
 f_param_plot(params)
@@ -64,8 +63,8 @@ f_preds(df, model_logistic) -> preds #preds.csv
 f_table_output(preds) # total count of raw versus fitted; summary_table.csv
 
 # plot of data cumsum (raw data) and fit_cumsum
-tickryr <- data.frame(year = 1975:2025)
-axisf <- tickr(tickryr, year, 5)
+tickryr <- data.frame(year = 1976:2024)
+axisf <- tickr(tickryr, year, 2)
 f_plot_output(preds) # fitted_plot.png
 
 # what is the minimum day that the weir should be in place?
