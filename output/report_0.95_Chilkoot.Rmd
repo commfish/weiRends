@@ -32,7 +32,7 @@ fs::dir_ls(here::here('output/chilkoot'), regexp = "\\.csv$") %>%
 
 
 # Background
-The objectives of this analysis were to:  
+The objectives of this analysis are to:  
 
   1.  Model the tails of the escapement to quantify the date to which the weir would be required to be operated through (e.g., would capture 95% of the escapement with 95% probability; the hard date). The earliest date a project can end is the day after the hard date. 
   
@@ -69,16 +69,16 @@ The variable *p* represents the asymptote of the cumulative escapement, *k* is t
 
 The evaluation process starts by fitting both models, and then the model with the least total variance is chosen for the analysis. 
 *Note that this is a coarse approach and is not a meaningful model comparison*.
-Cumulative escapement is predicted from the selected model and then this is converted into the number of estimated fish past the weir for a given day.
+Cumulative escapement is predicted from the selected model and then this is converted into the number of estimated fish that passed through the weir for a given day.
 A reconstructed escapement is estimated using observed daily data, filling in any data gaps with estimated daily escapement numbers. 
 This reconstructed escapement is then used to compute a cumulative sum of escapement. 
 The date that a weir should remain in place to capture the 95th percentile of 95% of the escapement is calculated using the reconstructed cumulative sums. Based on the model deviance, the logistic model provided an overall better fit to the data than the Gompertz model. None of the parameter estimates had substantial error bars (Figure \@ref(fig:param-koot)) and the models converged for all years. 
 
-```{r param-koot, fig.cap="Parameter estimates from the logistic model for the Chilkoot River."}
+```{r param-koot, fig.cap="Parameter estimates from the logistic model for the Chilkoot River with 95\\% confidence intervals shown by the black vertical lines."}
 knitr::include_graphics(here("figs/chilkoot/param_plot.png"))
 ```
 
-```{r pred-koot, fig.cap="Predicted cumulative escapements by year for the Chilkoot River. Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir (based on the most recent 10 years of data). This is the hard date. The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
+```{r pred-koot, fig.cap="Predicted cumulative escapements by year for the Chilkoot River. The filled, colored circle for each year indicates 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir (based on the most recent 10 years of data). This is the hard date. The open, colored circles are the raw cumulative escapement data and the lines are the predicted cumulative escapements for each year."}
 knitr::include_graphics(here("figs/chilkoot/pred_plot.png"))
 ```
 
@@ -86,7 +86,7 @@ knitr::include_graphics(here("figs/chilkoot/pred_plot.png"))
 ## 1% Rule (*Hard Date* and *End Date*)
 Using only the 10 most recent years of data, the 95th percentile date when 95% of the escapement has passed the weir  is Julian day `r tbls_koot$run_through$end_date` or 4 September (the hard date). The earliest date the project can end is Julian day 248 or 5 September (Julian day `r tbls_koot$run_through$end_date` plus one day). Based upon these dates, there is a 95% chance of capturing 95-97% of the total escapement for all weir removal rules (number of days; Table \@ref(tab:chance-koot)). In addition, there is a 50% chance of capturing 99% of the escapement. This is also reflected in the percent risk as well (Figure \@ref(fig:risk-koot)). Figure \@ref(fig:risk-koot) reflects the inverse of Table \@ref(tab:chance-koot). For example, a 99% chance is the same as a 1% risk. About 3%  of the escapement is missed (i.e., 97% caught) at a given risk level (99% chance or 1% risk level) based on implementing a 5-day 1% rule. 
 
-The projected median date that the project would end is Julian day 248 (5 September) for all weir removal rules (Table \@ref(tab:remove-koot)). The project end date was based on the 10 most recent years of data and estimates of when the weir would have been removed had the 1% rule been used to manage weir operations. The maximum date of weir removal was Julian day 255 (12 September) using the 5-day 1% rule, Julian day 254 (11 September) using the 4-day 1% rule, and Julian day 250 (7 September) using the 3-day 1% rule (Table \@ref(tab:remove-koot)). 
+The projected median date that the project would end is Julian day 248 (5 September) for all weir removal rules (Table \@ref(tab:remove-koot)). The project end date is based on the 10 most recent years of data and estimates of when the weir would have been removed had the 1% rule been used to manage weir operations. The maximum date of weir removal is Julian day 255 (12 September) using the 5-day 1% rule, Julian day 254 (11 September) using the 4-day 1% rule, and Julian day 250 (7 September) using the 3-day 1% rule (Table \@ref(tab:remove-koot)). 
 
 ```{r chance-koot, results = 'asis'}
 tbls_koot$remove_dates_run_caught %>% 
@@ -110,18 +110,18 @@ knitr::include_graphics(here("figs/chilkoot/remove_dates_risk_plot.png"))
   3. Based upon the median weir removal date (end date; Julian day 248 or 5 September), using the number of days to implement the 1% rule for the Chilkoot River, there is a 95% chance of capturing 97% of the total escapement for the 5-day rule. 
   
 # Appendix
-```{r pred-koot-1990, fig.cap="Predicted cumulative escapements by year for the Chilkoot River. Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir (based on the most recent 10 years of data; 2013-2022). This is the hard date. The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
+```{r pred-koot-1990, fig.cap="Predicted cumulative escapements by year for the Chilkoot River. The filled, colored circle in each figure indicates 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir (based on the most recent 10 years of data; 2013-2022). This is the hard date. The grey open circles are the raw cumulative escapement data and the lines are the predicted cumulative escapements."}
 knitr::include_graphics(here("figs/chilkoot/pred_plot_1990year.png"))
 ```
 
-```{r pred-koot-1991, fig.cap="Predicted cumulative escapements by year for the Chilkoot River. Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir (based on the most recent 10 years of data; 2013-2022). This is the hard date. The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
+```{r pred-koot-1991, fig.cap="Predicted cumulative escapements by year for the Chilkoot River. The filled, colored circle in each figure indicates 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir (based on the most recent 10 years of data; 2013-2022). This is the hard date. The grey open circles are the raw cumulative escapement data and the lines are the predicted cumulative escapements."}
 knitr::include_graphics(here("figs/chilkoot/pred_plot_1991year.png"))
 ```
 
-```{r pred-koot-2001, fig.cap="Predicted cumulative escapements by year for the Chilkoot River. Filled circles indicate 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir (based on the most recent 10 years of data; 2013-2022). This is the hard date. The circles are the cumulative escapement data and the lines are the predicted cumulative escapements."}
+```{r pred-koot-2001, fig.cap="Predicted cumulative escapements by year for the Chilkoot River. The filled, colored circle in each figure indicates 95\\% of the escapement has passed the weir. The vertical line is the 95th percentile date when 95\\% of the escapement has passed the weir (based on the most recent 10 years of data; 2013-2022). This is the hard date. The grey open circles are the raw cumulative escapement data and the lines are the predicted cumulative escapements."}
 knitr::include_graphics(here("figs/chilkoot/pred_plot_2001year.png"))
 ```
 
-```{r pred-koot-cumsums, fig.cap="A. Raw and fitted cumulative sums of the weir counts by year, based on the logistic model. B. Difference between the raw and fitted cumulative sums of the weir counts by year. The difference between the raw and fitted cumulative sums is the modeled tails."}
+```{r pred-koot-cumsums, fig.cap="A. Raw (black dotted line) and fitted (grey line) cumulative sums of the weir counts by year, based on the logistic model. B. Difference between the raw and fitted cumulative sums of the weir counts by year (based on Figure A). The differences between the raw and fitted cumulative sums are due to the modeled tails."}
 knitr::include_graphics(here("figs/chilkoot/fitted_plot.png"))
 ```

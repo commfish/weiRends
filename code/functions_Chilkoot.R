@@ -162,7 +162,7 @@ max = max(preds$fit_cumsum)
   preds %>% 
     group_by(year) %>%
     summarise(count = max(cumsum, na.rm = T),
-              value = 'cumulative sum') -> x
+              value = 'raw cumulative sum') -> x
   
   preds %>% 
     group_by(year) %>%
@@ -171,13 +171,13 @@ max = max(preds$fit_cumsum)
   rbind(.,x) %>%
     as.data.frame() %>% 
     ggplot() +
-    geom_line(aes(x = year, y = count, group = value, lty = value, color = value)) +
+    geom_line(aes(x = year, y = count, group = value, lty = value, color = value), size=1.2) +
     scale_colour_manual(values = c("grey80", "black")) +
     scale_x_continuous(limits = c(min(tickryr$year), max(tickryr$year)),
                        breaks = axisf$breaks, labels = axisf$labels) +
     scale_y_continuous(limits = c(0, max * 1.1),
                        labels = scales::comma) +
-    geom_text(aes(x = 1975, y = 150000, label="A)"),family="Times New Roman", colour="black", size=4) +
+    geom_text(aes(x = 1976, y = 150000, label="A)"),family="Times New Roman", colour="black", size=4) +
     theme(legend.position = c(0.2, 0.85), legend.title = element_blank (),
           legend.text=element_text(size=12)) +
     xlab('Year') +
@@ -199,7 +199,7 @@ plot1
     theme(legend.position = c(0.15, 0.85)) +
     theme ( legend.title = element_blank ()) +
     xlab('Year') +
-    geom_text(aes(x = 1975, y = 11500, label="B)"),family="Times New Roman", colour="black", size=4) +
+    geom_text(aes(x = 1976, y = 12000, label="B)"),family="Times New Roman", colour="black", size=4) +
     ylab('Difference') -> plot2
   plot2
   cowplot::plot_grid(plot1, plot2,  align = "v", nrow = 2, ncol=1) 

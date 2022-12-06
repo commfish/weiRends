@@ -53,10 +53,10 @@ f_deviance(model_gompertz, model_logistic) # check model fits - did all models c
 f_params(model_logistic) -> params # choose model based on deviance above (need to update code if
 # another model becomes the recommended model for this stock)
 
-# plot parameter fits - because why not?
+# plot parameter fits
 f_param_plot(params)
 
-# predict the model on a complete dataset
+# predict the model on a complete data set
 f_preds(df, model_logistic) -> preds #preds.csv
 
 # table of data cumsum (raw data) and fit_cumsum
