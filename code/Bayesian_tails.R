@@ -219,7 +219,7 @@ write.csv(y2med, paste0(out.path,"y2med(2).csv",sep='')) # median of the iterati
 # calculate missing value for each year total:              
 # change names to year id 
 colnames(y2) <- tyear
-y2 <- ifelse(y2<0,0,y2) # added this (SM 1_5_2023); I think the negative missing counts need to be replaced with 0 in the data set
+y2 <- ifelse(y2<0,0,y2) # added this (Sara Miller 1_5_2023); I think the negative missing counts need to be replaced with 0 in the data set; IS THIS CORRECT???????????
 # combine columns based on year id 
 t3 <- as.data.frame(sapply(unique(colnames(y2)), function(x) rowSums(y2[, colnames(y2) == x, drop = FALSE])))
  write.csv(t3, paste0(out.path,"t3.csv",sep='')) # sum of the missing counts per iteration (e.g., t1 is the sum of the missing counts for iteration 1; includes negative values that should not be there)
