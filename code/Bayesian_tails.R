@@ -19,7 +19,7 @@ library(tidyverse)
 
 # name of results file
 results_file = 'Chilkoot_sockeye_results.csv'
-out.path <- paste0("output/Bayesian_tails/Chilkoot/")
+out.path <- paste0("output/Bayesian_tails/Chilkoot/test/")
 if(!exists(out.path)){dir.create(out.path)}
 
 # Specify x-axis of graph and title.
@@ -30,7 +30,7 @@ gtitle = 'Chilkoot_sockeye'
 
 # import csv file 
 # read table and put into data escape
-read.csv('data/Chilkoot_transform_sockeye.csv', header =TRUE) -> escape
+read.csv('data/Chilkoot_transform_sockeye_test.csv', header =TRUE) -> escape
 
 # dimensions of the data set
 dim(escape)
@@ -75,13 +75,13 @@ for(j in 1:nyrs) {
 for(j in 1:nyrs) {
 # Normal distribution positive only 
 #  a: is independent not hierarchical 
-   a[j] ~ dnorm(2000,0.0001)%_%T(0,) # amplitude of the run peak parameter; normal distribution with mean mu
+   a[j] ~ dnorm(2000,0.00001)%_%T(0,) # amplitude of the run peak parameter; normal distribution with mean mu
                                         # and precision tau; 
    b[j] ~ dnorm(b0,b0.prec)%_%T(0,) # width of the run peak
-   mu[j] ~ dnorm(mu0,mu0.prec)%_%T(0,) # location by date of the run peak
+   mu[j] ~ dnorm(mu0,mu0.prec)%_%T(0,) # location by date of the run peak; https://www.scribbr.com/statistics/normal-distribution/
      }  
-		b0 ~ dnorm(0.5,0.001)%_%T(0,)  
-		mu0 ~ dnorm(70,0.001)%_%T(0,)
+		b0 ~ dnorm(0.5,0.00001)%_%T(0,)  
+		mu0 ~ dnorm(70,0.00001)%_%T(0,)
 		b0.prec <-1/b0.ssq 
     b0.ssq <- b0.sigma*b0.sigma
     b0.sigma ~ dunif(0,100)  
@@ -105,7 +105,7 @@ datnew<-list(nyrs=nyrs, ndays=ndays, x=x, y=y)
 mu <- rep(0,nyrs)
 a <- rep(0,nyrs)
   for (j in 1:nyrs){
-     a[j]<-  (max(escape[,j+2],na.rm=TRUE))    #can change to force not to use max, eg maxx1.5
+     a[j]<-  (max(escape[,j+2],na.rm=TRUE))    #can change to force not to use max, e.g., maxx1.5
      mu[j]<-  sum(x*escape[,j+2],na.rm=TRUE)/sum(escape[,j+2],na.rm=TRUE)
     }
     
@@ -183,7 +183,6 @@ for(i in 0:(int-1)){
 #	lines(post.samp[1:nsamps,i+j],col='red')
 }
 }
-
 dev.off()
 
 # Extract NA data											  
@@ -204,7 +203,7 @@ t1.name <- substr(colnames(t1),2,15)
 colnames(t1) <- t1.name
 # extract predicted data based on y2's bracket 
 y2 <- t1[,navector]
-write.csv(y2, paste0(out.path,"y2med.csv",sep=''))
+write.csv(y2, paste0(out.path,"y2med(1).csv",sep='')) # full iterations for each day for each year (e.g., 2000 for year 2003 day 30)
 # extract names: this extracts only first part of bracket (year id)
 tyear <- substr(navector,2,3)
 tyear <- ifelse(substr(tyear,2,2)== ',',substr(tyear,1,1),tyear)
@@ -215,17 +214,19 @@ y2med <- ifelse(y2med<0,0,y2med)
 y2low <- apply(y2[,1:dim(y2)[2]],2,function(x) quantile(x, 0.025))
 y2low <- ifelse(y2low<0,0,y2low)
 y2up <- apply(y2[,1:dim(y2)[2]],2,function(x) quantile(x, 0.975))
-write.csv(y2med, paste0(out.path,"y2med.csv",sep=''))
+write.csv(y2med, paste0(out.path,"y2med(2).csv",sep='')) # median of the iterations for that year and day (e.g., median of 2000 iterations; if < 0, then 0 for an iteration)
 
 # calculate missing value for each year total:              
 # change names to year id 
 colnames(y2) <- tyear
+y2 <- ifelse(y2<0,0,y2) # added this (SM 1_5_2023); I think the negative missing counts need to be replaced with 0 in the data set
 # combine columns based on year id 
 t3 <- as.data.frame(sapply(unique(colnames(y2)), function(x) rowSums(y2[, colnames(y2) == x, drop = FALSE])))
+ write.csv(t3, paste0(out.path,"t3.csv",sep='')) # sum of the missing counts per iteration (e.g., t1 is the sum of the missing counts for iteration 1; includes negative values that should not be there)
 # calculate median, 95% CI of missing dates  
 # ym, ylow, and yup are median, 95% CI of annual passage of missing dates
 ym <- round(apply(t3[,1:dim(t3)[2]],2,median),0)
-ym <- ifelse(ym<0,0,ym)
+ym <- ifelse(ym<0,0,ym) # ym is the median of the 2000 iterations (i.e., 2000 iterations for each missing value are computed and then all the missing values for one iteration are summed; then the median is applied)
 ylow <- round(apply(t3[,1:dim(t3)[2]],2,function(x) quantile(x, 0.025)),0)
 ylow<- ifelse(ylow<0,0,ylow)
 yup <- round(apply(t3[,1:dim(t3)[2]],2,function(x) quantile(x, 0.975)),0)
@@ -271,7 +272,7 @@ for (i in 1:ndays){
      est.esc[i,j]<- ifelse(is.na(escape[i,j+2]), Modelesc[i,j],escape[i,j+2]) 
      }
     }
-colSums(est.esc)
+colSums(est.esc) # observed escapement and modeled escapement to fill in blanks
 
 # y2m is a matrix of median passage estimates of all missing passage
 y2m <- matrix(0,ndays,nyrs)
@@ -296,7 +297,7 @@ for (j in 1:nyrs){
     }
   }
 
-write.csv(y2m, paste0(out.path,"y2m.csv",sep=''))
+write.csv(y2m, paste0(out.path,"y2m.csv",sep='')) # median of the 2000 iterations for each day for each year
 
 # plot graph
 pdf(file=paste0(out.path,"plots.pdf"),height=6, width=12,onefile=T)
@@ -314,7 +315,6 @@ for(i in 1:nyrs){
 # plot median passage estimate    
     points(x2,y2m[,i], pch=21, col='black',bg='white')
 }
-
 dev.off()
 
 # data outputs        
@@ -329,7 +329,7 @@ esc.sum <- data.frame(year,esc.ob, ym2,yl2,yu2)
 esc.sum$p.est <- ym2/(esc.ob+ym2)
 # rename column name
 names(esc.sum) <- c('year','observed','estimated','low.95%CI','upper.95%CI','% estimated')
-# write csv file to working directory
+# write csv file to working directory (summary is based on t3 output; median of the 2000 iterations w/o negative values included)
 write.csv(esc.sum,paste0(out.path, paste0(gtitle,'_summary.csv')),na = '',row.names = FALSE)    
 
 # daily observed and estimated missing count by year     
@@ -341,3 +341,4 @@ names(esc.daily) <- c('date','observed','estimated','low.95%CI','upper.95%CI', '
 # write csv file to working directory
 write.csv(esc.daily,paste0(out.path, paste0(gtitle,'_',year[i],'.csv')),na = '',row.names = FALSE)    
 }
+# yearly csv files are the median of the 2000 iterations for the missing days of each year
