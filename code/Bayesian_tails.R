@@ -30,7 +30,7 @@ gtitle = 'Chilkoot_sockeye'
 
 # import csv file 
 # read table and put into data escape
-read.csv('data/Chilkoot_transform_sockeye_test.csv', header =TRUE) -> escape
+read.csv('data/Chilkoot_transform_sockeye.csv', header =TRUE) -> escape
 
 # dimensions of the data set
 dim(escape)
@@ -166,7 +166,7 @@ parameters <- c('a','b','mu','y')
 starttime=Sys.time()
 # full run
 sim <- jags(data=append(datnew,hyper), inits=initss, parameters.to.save=parameters, model.file= jag.model,n.chains=1, #
-	n.iter=50,n.burnin=10,n.thin=2,DIC=TRUE)
+	n.iter=5000,n.burnin=1000,n.thin=10,DIC=TRUE)
 # test run
 # sim <- jags(data=datnew, inits=inits, parameters.to.save=parameters, model.file= jag.model,n.chains=1, 
 #            n.iter=500,n.burnin=100,n.thin=2,DIC=TRUE)
