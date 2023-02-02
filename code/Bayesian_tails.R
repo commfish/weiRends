@@ -34,33 +34,74 @@ read.csv('data/Chilkoot_transform_sockeye_test.csv', header =TRUE) -> escape
 
 # dimensions of the data set
 dim(escape)
-# x is days vector
-x <- as.vector(escape$Day)
+# d is days vector
 x2 <- as.Date(escape$Date,"%d-%b")
-# nyrs is the number of years data have 
-nyrs <- dim(escape)[2] -2
+# nyrs is the number of years data has
+nyrs <- dim(escape)[2] -1
 # ndays is the number of days  
 ndays <- dim(escape)[1]
 # Set an empty matrix y 
-
+n.sigma = 50
 
 # data transformation  (change data from columns to rows); adds 0.01 to each value; keeps NAs                          
 y <- matrix(0,nyrs,ndays)
 for (i in 1:ndays){
   for (j in 1:nyrs){
-#     y[j,i]<-  log(escape[i,j+2]+0.01)
-     y[j,i]<-  escape[i,j+2]+0.01  
-     }
-    }
+    # Add 0.01 so that the model will not fail. 
+    y[j,i]<-  ifelse(escape[i,j+1]<=0,0.1,escape[i,j+1])
+  }
+}
+dat <-list(nyrs=nyrs, ndays=ndays, y=y)
+# create initial values
+# calculate initial value used for Bayesian method   
+
+nyrs <- dim(escape)[2] -1
+ndays <- dim(escape)[1]
+d <- seq(1,ndays)
+sigma <- rep(0,ndays)
+mu <- rep(0,nyrs)
+a <- rep(0,nyrs)
+b <- rep(0,nyrs)
+  
+for (j in 1:nyrs){
+  a[j]<-  (max(escape[,j+1],na.rm=TRUE))    #can change to force not to use max, e.g., maxx1.5
+  mu[j]<-  sum(d*escape[,j+1],na.rm=TRUE)/sum(escape[,j+1],na.rm=TRUE)
+  b[j]<-   1/sqrt(log(sum(escape[,j+1],na.rm=TRUE)))
+}
+
+inits<- list(
+    a =(a)*rnorm(nyrs,1,0.25), 
+    mu = mu*rnorm(nyrs,1,0.25),
+    b = b*rnorm(nyrs,1,0.1),
+    a0 = median(a),
+    b0 = median(b),
+    mu0 = median(mu),
+    a0.sigma = sd(a),
+    mu0.sigma = sd(mu),
+    b0.sigma = sd(b)
+  )
+
+inits
+
+hyper<- list(
+    a0m = median(inits$a),
+    a0tau = 2/var(inits$a),
+    b0m = median(inits$b),
+    b0tau = 2/var(inits$b),
+    mu0m = median(inits$mu),
+    mu0tau = 2/var(inits$mu),
+    sigma0 = n.sigma
+  ) 
+hyper
 
 # create JAGS model code					   
 jag.model<- function(){
 for(j in 1:nyrs) {
     for(i in 1:ndays){
-    y[j,i] ~ dnorm(theta[j,i],tausq[i])
+    y[j,i] ~ dnorm(theta[j,i],tausqd[i]) # normal error assumption
 #    y[j,i] ~ dpois(theta[j,i])
 # Assume that run timing distribution takes log normal distribution 
-    theta[j,i] <- a[j]*exp(-0.5*pow(log(x[i]/mu[j])/b[j],2))
+    theta[j,i] <- exp(a[j])*exp(-0.5*pow(log(i/mu[j])/b[j],2))
 # Assume that run timing distribution takes Extreme value distribution 
 #   theta[j,i] <- a[j]*exp(-exp(-(x[i]-mu[j])/b[j])-(x[i]-mu[j])/b[j]+1)
 # Assume that run timing distribution takes log-logistic distribution 
@@ -75,77 +116,57 @@ for(j in 1:nyrs) {
 for(j in 1:nyrs) {
 # Normal distribution positive only 
 #  a: is independent not hierarchical 
-   a[j] ~ dnorm(2000,0.00001)%_%T(0,) # amplitude of the run peak parameter; normal distribution with mean mu
-                                        # and precision tau; 
-   b[j] ~ dnorm(b0,b0.prec)%_%T(0,) # width of the run peak
-   mu[j] ~ dnorm(mu0,mu0.prec)%_%T(0,) # location by date of the run peak; https://www.scribbr.com/statistics/normal-distribution/
+  a[j] ~ dnorm(a0,a0.prec)%_%T(1,) # amplitude of the run peak parameter; normal distribution with mean mu                            # and precision tau; 
+  b[j] ~ dnorm(b0,b0.prec)%_%T(0.2,) # width of the run peak
+  mu[j] ~ dnorm(mu0,mu0.prec)%_%T(1,) # location by date of the run peak; https://www.scribbr.com/statistics/normal-distribution/
      }  
-		b0 ~ dnorm(0.5,0.00001)%_%T(0,)  
-		mu0 ~ dnorm(70,0.00001)%_%T(0,)
-		b0.prec <-1/b0.ssq 
-    b0.ssq <- b0.sigma*b0.sigma
-    b0.sigma ~ dunif(0,100)  
-		mu0.prec <-1/mu0.ssq 
-    mu0.ssq <- mu0.sigma*mu0.sigma
-    mu0.sigma ~ dunif(0,100)  
+  # Rule of thumb prior
+  # a log of the highest passage 
+  # b 1/(log(total passage))
+  # m peak passage date. 
+  
+  a0 ~ dnorm(a0m,a0tau)
+  b0 ~ dnorm(b0m,b0tau)
+  mu0 ~ dnorm(mu0m,mu0tau)
+  a0.prec <-1/pow(a0.sigma,2)
+  a0.sigma ~ dunif(0,2)  	
+  b0.prec <-1/pow(b0.sigma,2)
+  b0.sigma ~ dunif(0,2)  
+  mu0.prec <-1/pow(mu0.sigma,2)
+  mu0.sigma ~ dunif(0,10) 
     
 ## This assumes that variance of each year is independent.     
- for(i in 1:ndays) {    
-	   tausq[i] <- pow(sigma[i],-2)
-		sigma[i] ~ dunif(0,100) 
-     }
+  for(i in 1:ndays) {    
+    sigmad[i] ~ dunif(0,sigma0)  
+    tausqd[i] <-pow(sigmad[i],-2)
+  }		
 }
 
 # create JAGS data file                      
 # initial values can change based on your data and model; y is transformed data          
-datnew<-list(nyrs=nyrs, ndays=ndays, x=x, y=y)
+datnew<-list(nyrs=nyrs, ndays=ndays, y=y)
 
-# calculate initial value used for Bayesian method       
-# zs is empirical standard deviation for each 
-mu <- rep(0,nyrs)
-a <- rep(0,nyrs)
-  for (j in 1:nyrs){
-     a[j]<-  (max(escape[,j+2],na.rm=TRUE))    #can change to force not to use max, e.g., maxx1.5
-     mu[j]<-  sum(x*escape[,j+2],na.rm=TRUE)/sum(escape[,j+2],na.rm=TRUE)
-    }
-    
-# calculate initial values 
-zs <- rep(0,ndays)
-for (i in 1:ndays){
-     zs[i]<-  sd(y[,i],na.rm=TRUE)
-    }
-# add 0 when zs is NA 
-zs[is.na(zs)] <- 0  
-
-b <- rep(0.3,nyrs)
-sigma <- zs
-b0 <- mean(b)
-mu0 <- median(mu)
-b0.sigma <- 1
-mu0.sigma <- 5
-z <- rep(0,nyrs)
-
-# save initial value as list file                        
-inits <- function(){list(
-a = a, 
-mu = mu,
-b = b,
-b0 = b0,
-mu0 = mu0,
-b0.sigma = b0.sigma,
-mu0.sigma = mu0.sigma
+initss<-function(){ list(
+  a =(a)*rnorm(nyrs,1,0.25), 
+  mu = mu*rnorm(nyrs,1,0.25),
+  b = b*rnorm(nyrs,1,0.1),
+  a0 = median(a),
+  b0 = median(b),
+  mu0 = median(mu),
+  a0.sigma = sd(a),
+  mu0.sigma = sd(mu),
+  b0.sigma = sd(b)
 )
 }
-
-# run JAGS                                              
-# define the parameters (nodes) of interest 
+hyper<-hyper
+# save initial value as list file   
 parameters <- c('a','b','mu','y') 
-	
+
 # run JAGS using the bugs() function
 starttime=Sys.time()
 # full run
-sim <- jags(data=datnew, inits=inits, parameters.to.save=parameters, model.file= jag.model,n.chains=1, #
-	n.iter=5000,n.burnin=1000,n.thin=2,DIC=TRUE)
+sim <- jags(data=append(datnew,hyper), inits=initss, parameters.to.save=parameters, model.file= jag.model,n.chains=1, #
+	n.iter=50,n.burnin=10,n.thin=2,DIC=TRUE)
 # test run
 # sim <- jags(data=datnew, inits=inits, parameters.to.save=parameters, model.file= jag.model,n.chains=1, 
 #            n.iter=500,n.burnin=100,n.thin=2,DIC=TRUE)
