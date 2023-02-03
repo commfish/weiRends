@@ -24,7 +24,7 @@ if(!exists(out.path)){dir.create(out.path)}
 
 # Specify x-axis of graph and title.
 # start day:  First day of the data entry
-start_day = 'Days from 5/27'
+start_day = 'Days from 6/03'
 # gtitle: title name appears on the graph
 gtitle = 'Chilkoot_sockeye'
 
@@ -64,7 +64,7 @@ a <- rep(0,nyrs)
 b <- rep(0,nyrs)
   
 for (j in 1:nyrs){
-  a[j]<-  (max(escape[,j+1],na.rm=TRUE))    #can change to force not to use max, e.g., maxx1.5
+  a[j]<-  a[j]<-  log(max(escape[,j+1],na.rm=TRUE))        #can change to force not to use max, e.g., maxx1.5
   mu[j]<-  sum(d*escape[,j+1],na.rm=TRUE)/sum(escape[,j+1],na.rm=TRUE)
   b[j]<-   1/sqrt(log(sum(escape[,j+1],na.rm=TRUE)))
 }
@@ -98,7 +98,9 @@ hyper
 jag.model<- function(){
 for(j in 1:nyrs) {
     for(i in 1:ndays){
-    y[j,i] ~ dnorm(theta[j,i],tausqd[j]) # normal error assumption
+    #y[j,i] ~ dnorm(theta[j,i],tausqd[j]) # normal error assumption (annual sigma)
+      y[j,i] ~ dnorm(theta[j,i], tausqd[i]) # daily sigma (alternative sigma)
+      
 #    y[j,i] ~ dpois(theta[j,i])
 # Assume that run timing distribution takes log normal distribution 
     theta[j,i] <- exp(a[j])*exp(-0.5*pow(log(i/mu[j])/b[j],2))
@@ -135,12 +137,19 @@ for(j in 1:nyrs) {
   mu0.prec <-1/pow(mu0.sigma,2)
   mu0.sigma ~ dunif(0,10) 
     
-## This assumes that variance of each year is independent.     
-  for(i in 1:nyrs) {    
-    sigmad[i] ~ dunif(0,sigma0)  
-    tausqd[i] <-pow(sigmad[i],-2)
-  }            
+## This assumes that variance of each year is independent.  
+  # yearly sigma
+#  for(i in 1:nyrs) {    
+#    sigmad[i] ~ dunif(0,sigma0)  
+#    tausqd[i] <-pow(sigmad[i],-2)
+#  }            
   
+#}
+# daily sigma (alternative sigma )
+for(i in 1:ndays) {    
+  sigmad[i] ~ dunif(0,sigma0)  
+  tausqd[i] <-pow(sigmad[i],-2)
+}		
 }
 
 # create JAGS data file                      
@@ -167,7 +176,7 @@ parameters <- c('a','b','mu','y')
 starttime=Sys.time()
 # full run
 sim <- jags(data=append(datnew,hyper), inits=initss, parameters.to.save=parameters, model.file= jag.model,n.chains=1, #
-	n.iter=5000,n.burnin=1000,n.thin=10,DIC=TRUE)
+	n.iter=10000,n.burnin=2000,n.thin=10,DIC=TRUE)
 # test run
 # sim <- jags(data=datnew, inits=inits, parameters.to.save=parameters, model.file= jag.model,n.chains=1, 
 #            n.iter=500,n.burnin=100,n.thin=2,DIC=TRUE)
@@ -241,7 +250,7 @@ write.csv(y2med, paste0(out.path,"y2med(2).csv",sep='')) # median of the iterati
 # calculate missing value for each year total:              
 # change names to year id 
 colnames(y2) <- tyear
-y2 <- ifelse(y2<0,0,y2) # added this (Sara Miller 1_5_2023); I think the negative missing counts need to be replaced with 0 in the data set; IS THIS CORRECT???????????
+#y2 <- ifelse(y2<0,0,y2) # added this (Sara Miller 1_5_2023); I think the negative missing counts need to be replaced with 0 in the data set; IS THIS CORRECT???????????
 # combine columns based on year id 
 t3 <- as.data.frame(sapply(unique(colnames(y2)), function(x) rowSums(y2[, colnames(y2) == x, drop = FALSE])))
  write.csv(t3, paste0(out.path,"t3.csv",sep='')) # sum of the missing counts per iteration (e.g., t1 is the sum of the missing counts for iteration 1; includes negative values that should not be there)
@@ -271,16 +280,22 @@ for(i in tname){
 }
 
 # plot run timing:  
-Modelesc <- matrix(0,ndays,nyrs)
 bug_summary <- sim_sum$summary 
 am <- bug_summary[substr(row.names(bug_summary),1,2)=='a[',5]
 bm <- bug_summary[substr(row.names(bug_summary),1,2)=='b[',5]
 mum <- bug_summary[substr(row.names(bug_summary),1,2)=='mu',5]
 
+# nyrs is the number of years (i.e. number of columns) 
+nyrs <- dim(escape)[2] -1
+# ndays is the number of days (i.e. number of rows)  
+ndays <- dim(escape)[1]
+days <- seq(1,ndays)
+
+Modelesc <- matrix(0,ndays,nyrs)
 for (i in 1:ndays){
   for (j in 1:nyrs){
 #     Expected log normal run timing   
-      Modelesc[i,j]<- (am[j]*exp(-0.5*(log(x[i]/mum[j])/bm[j])^2))
+    Modelesc[i,j]<- exp(am[j])*exp(-0.5*(log(days[i]/mum[j])/bm[j])^2)
 #     Expected Extreme value normal run timing   
 #      Modelesc[i,j] <-am[j]*exp(-exp(-(x[i]-mum[j])/bm[j])-(x[i]-mum[j])/bm[j]+1)
 #     Expected log logistic run timing
@@ -291,7 +306,7 @@ for (i in 1:ndays){
 est.esc <- matrix(0,ndays,nyrs)
 for (i in 1:ndays){
   for (j in 1:nyrs){
-     est.esc[i,j]<- ifelse(is.na(escape[i,j+2]), Modelesc[i,j],escape[i,j+2]) 
+     est.esc[i,j]<- ifelse(is.na(escape[i,j+1]), Modelesc[i,j],escape[i,j+1]) 
      }
     }
 colSums(est.esc) # observed escapement and modeled escapement to fill in blanks
@@ -326,10 +341,10 @@ pdf(file=paste0(out.path,"plots.pdf"),height=6, width=12,onefile=T)
 #windows(h=6,w=12,record=TRUE)
 par(mfrow=c(3,3),mai=c(.6,.5,.1,.1))
 for(i in 1:nyrs){
-	maxdat<-max(max(escape[,i+2],na.rm=T),max(y2u[,i],na.rm=T))
+	maxdat<-max(max(escape[,i+1],na.rm=T),max(y2u[,i],na.rm=T))
 # plot observed passage
-	plot(x2,escape[,i+2],col='blue', ylim = c(0,maxdat), xlab= start_day, ylab='escapement')
-	legend('topright',bty ='n', c(gtitle,paste(substr(names(escape)[i+2],2,5)),paste('missing counts',ym2[i]),paste('95%CI ',yl2[i],' - ',yu2[i])))
+	plot(x2,escape[,i+1],col='blue', ylim = c(0,maxdat), xlab= start_day, ylab='escapement')
+	legend('topright',bty ='n', c(gtitle,paste(substr(names(escape)[i+1],2,5)),paste('missing counts',ym2[i]),paste('95%CI ',yl2[i],' - ',yu2[i])))
 # plot modeled run timing
 	lines(x2,Modelesc[,i],col='red')
 # plot 95% CI lines    
@@ -342,7 +357,7 @@ dev.off()
 # data outputs        
 # annual Observed and Estimated Missing Count         
 # extract total observed counts 
-esc.ob <- colSums(escape[,3:(nyrs+2)],na.rm = TRUE)
+esc.ob <- colSums(escape[,2:(nyrs+1)],na.rm = TRUE)
 # extract year column 
 year <- substr(names(esc.ob),2,5)
 # create data frame with year, observed escapement, estimated escapement (median), lower 95%CI, and upper 95%CI 
@@ -357,7 +372,7 @@ write.csv(esc.sum,paste0(out.path, paste0(gtitle,'_summary.csv')),na = '',row.na
 # daily observed and estimated missing count by year     
 for(i in 1:nyrs){
 # create a data.frame with date, observed escapement, estimated (median), lower 95% CI, upper 95% CI, and the full modeled runtiming curve
-esc.daily <- data.frame(escape$Date,escape[,2+i],round(y2m[,i],0),round(y2l[,i],0),round(y2u[,i],), round(Modelesc[,i],))
+esc.daily <- data.frame(escape$Date,escape[,1+i],round(y2m[,i],0),round(y2l[,i],0),round(y2u[,i],), round(Modelesc[,i],))
 # rename the column name 
 names(esc.daily) <- c('date','observed','estimated','low.95%CI','upper.95%CI', 'run_timing_curve')
 # write csv file to working directory
