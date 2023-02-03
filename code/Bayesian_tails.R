@@ -98,7 +98,7 @@ hyper
 jag.model<- function(){
 for(j in 1:nyrs) {
     for(i in 1:ndays){
-    y[j,i] ~ dnorm(theta[j,i],tausqd[i]) # normal error assumption
+    y[j,i] ~ dnorm(theta[j,i],tausqd[j]) # normal error assumption
 #    y[j,i] ~ dpois(theta[j,i])
 # Assume that run timing distribution takes log normal distribution 
     theta[j,i] <- exp(a[j])*exp(-0.5*pow(log(i/mu[j])/b[j],2))
@@ -136,10 +136,11 @@ for(j in 1:nyrs) {
   mu0.sigma ~ dunif(0,10) 
     
 ## This assumes that variance of each year is independent.     
-  for(i in 1:ndays) {    
+  for(i in 1:nyrs) {    
     sigmad[i] ~ dunif(0,sigma0)  
     tausqd[i] <-pow(sigmad[i],-2)
-  }		
+  }            
+  
 }
 
 # create JAGS data file                      
