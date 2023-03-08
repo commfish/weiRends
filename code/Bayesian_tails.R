@@ -64,7 +64,7 @@ a <- rep(0,nyrs)
 b <- rep(0,nyrs)
   
 for (j in 1:nyrs){
-  a[j]<-  a[j]<-  log(max(escape[,j+1],na.rm=TRUE))        #can change to force not to use max, e.g., maxx1.5
+  a[j]<-  log(max(escape[,j+1],na.rm=TRUE))        #can change to force not to use max, e.g., maxx1.5
   mu[j]<-  sum(d*escape[,j+1],na.rm=TRUE)/sum(escape[,j+1],na.rm=TRUE)
   b[j]<-   1/sqrt(log(sum(escape[,j+1],na.rm=TRUE)))
 }
